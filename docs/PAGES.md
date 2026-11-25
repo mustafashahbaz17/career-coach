@@ -35,7 +35,7 @@ Tells a stranger who Career Coach is for, what it does and what it costs. Sectio
 All use `AuthFrame.tsx`: dark panel with the pitch on the left, form on the right (on phones the form comes first, with the logo at the top).
 
 ### `/signup` — Create account (`SignUp.tsx`)
-Full name, email, password (8+ characters, letters and numbers — checked before sending). Calls **Supabase Auth sign-up**; the name is stored as `full_name` on the account. The database then creates the student's **`profiles`** row automatically (data lead's trigger). If Supabase has email confirmation on, it shows "Check your inbox"; the link brings them back to `/signin`. If the email is already used: "An account with this email already exists — sign in instead."
+Full name, email, password (8+ characters, letters and numbers — checked before sending). Calls **Supabase Auth sign-up**; the name is stored on the account. The database then creates the student's **`profiles`** row automatically (data lead's trigger, id + email only), and on first sign-in the website copies the name into `profiles.full_name`. If Supabase has email confirmation on, it shows "Check your inbox"; the link brings them back to `/signin`. If the email is already used: "An account with this email already exists — sign in instead."
 - **Writes:** a new Supabase Auth user (→ `profiles` row via trigger). **Webhooks:** none.
 
 ### `/signin` — Sign in (`SignIn.tsx`)

@@ -25,15 +25,24 @@ type AuthState = {
 const AuthContext = createContext<AuthState | null>(null)
 
 // Reads the signed-in student's profile row. Row-level security means it can only ever return their own row.
-async function loadProfile(userId: string): Promise<{ profile: Profile | null; error: string }> {
+// The database trigger creates the row with just id + email, so the first time we see it empty we copy in
+// the name the student typed at sign-up (students are allowed to update their own full_name).
+async function loadProfile(userId: string, signUpName?: string): Promise<{ profile: Profile | null; error: string }> {
   if (!supabase) return { profile: null, error: 'not_configured' }
   const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
   if (error) {
     console.error('Could not read profile', error)
     return { profile: null, error: error.message }
   }
-  return { profile: (data as Profile) ?? null, error: '' }
+  const profile = (data as Profile) ?? null
+  if (profile && !profile.full_name && signUpName) {
+    const { error: upErr } = await supabase.from('profiles').update({ full_name: signUpName }).eq('id', userId)
+    if (!upErr) profile.full_name = signUpName
+  }
+  return { profile, error: '' }
 }
+
+const nameFrom = (s: Session) => (s.user.user_metadata?.full_name as string | undefined) || undefined
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
@@ -48,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null)
       return null
     }
-    const r = await loadProfile(s.user.id)
+    const r = await loadProfile(s.user.id, nameFrom(s))
     setProfile(r.profile)
     setProfileError(r.error)
     return r.profile
@@ -62,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!alive) return
       setSession(data.session)
       if (data.session) {
-        const r = await loadProfile(data.session.user.id)
+        const r = await loadProfile(data.session.user.id, nameFrom(data.session))
         if (!alive) return
         setProfile(r.profile)
         setProfileError(r.error)
@@ -80,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
         // Load the profile outside this callback (Supabase recommends not awaiting inside it).
         setTimeout(async () => {
-          const r = await loadProfile(s.user.id)
+          const r = await loadProfile(s.user.id, nameFrom(s))
           if (!alive) return
           setProfile(r.profile)
           setProfileError(r.error)
