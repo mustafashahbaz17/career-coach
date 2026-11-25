@@ -1,0 +1,2 @@
+title,organisation,kind,industry,track_keys,city,remote,description,apply_url,deadline,min_cgpa,degrees,grad_years,age_max,nationality_rule,gender_rule,source_url,verified,last_checked,is_sample
+EXAMPLE ROW - DELETE BEFORE IMPORT,Example Company,management_trainee,FMCG,"{marketing,operations}",Lahore,false,One-line description of the programme,https://example.com/apply,2026-12-31,3.00,"{BBA,BS}","{2026,2027}",26,pakistani_only,any,https://example.com/source,false,2026-11-25,true
