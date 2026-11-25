@@ -97,8 +97,8 @@ export default function AboutYou({ editing, onSaved }: { editing: boolean; onSav
 
   return (
     <div className="stack-l" ref={topRef}>
-      {/* 1a. Optional LinkedIn import */}
-      {!editing && (
+      {/* 1a. Optional LinkedIn import (also shown when editing later, so a failed import can be retried) */}
+      {(
         <section className="card tint stack-m">
           <div>
             <h3>Import from LinkedIn <span className="muted small" style={{ fontWeight: 600 }}>(optional)</span></h3>

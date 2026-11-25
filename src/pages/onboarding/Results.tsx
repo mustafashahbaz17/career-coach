@@ -12,9 +12,10 @@ import { supabase } from '../../lib/supabase'
 import { callWorkflow, type WorkflowFailure } from '../../lib/callWorkflow'
 import { useAuth } from '../../auth/AuthProvider'
 import ErrorNotice from '../../components/ErrorNotice'
+import TrackCards, { toShownTrack, type ShownTrack } from '../../components/TrackCards'
 
 type TrackInfo = { key: string; name: string; description: string }
-type Shown = { key: string; name: string; description: string; score: number; reason?: string }
+type Shown = ShownTrack
 type AiReply = {
   tracks: { track_key: string; name?: string; score: number; reason: string }[]
   confidence?: number
@@ -36,16 +37,7 @@ export default function Results({ justFinished, onRedoQuiz }: { justFinished: bo
   const [failure, setFailure] = useState<WorkflowFailure | null>(null)
   const startedAi = useRef(false)
 
-  const toShown = useCallback(
-    (t: { track_key: string; name?: string; score: number; reason?: string }, map: Record<string, TrackInfo>): Shown => ({
-      key: t.track_key,
-      name: map[t.track_key]?.name || t.name || t.track_key,
-      description: map[t.track_key]?.description || '',
-      score: Number(t.score) || 0,
-      reason: t.reason,
-    }),
-    [],
-  )
+  const toShown = toShownTrack
 
   // Replaces the brief's placeholder fetchAiTrackReasons(): asks n8n for the AI-written tracks.
   const askAi = useCallback(async (map: Record<string, TrackInfo>) => {
@@ -57,7 +49,7 @@ export default function Results({ justFinished, onRedoQuiz }: { justFinished: bo
     const tracks = (r.data.tracks || []).slice(0, 3).map((t) => toShown(t, map))
     if (!tracks.length) { setFailure({ ok: false, code: 'ai_unavailable', message: 'Our AI is having a moment. Your work is saved; please try again.', retryable: true }); return }
     setAi({ tracks, confidence: r.data.confidence, followups: r.data.needs_followup ? (r.data.followup_questions || []).slice(0, 2) : [] })
-  }, [toShown])
+  }, [])
 
   const load = useCallback(async () => {
     if (!supabase || !uid) return
@@ -90,7 +82,7 @@ export default function Results({ justFinished, onRedoQuiz }: { justFinished: bo
       startedAi.current = true
       void askAi(map)
     }
-  }, [uid, justFinished, toShown, askAi])
+  }, [uid, justFinished, askAi])
 
   useEffect(() => { void load() }, [load])
 
@@ -105,7 +97,6 @@ export default function Results({ justFinished, onRedoQuiz }: { justFinished: bo
   if (loadFailed) return <ErrorNotice failure={LOAD_FAILED} onRetry={load} />
 
   const shown = ai?.tracks.length ? ai.tracks : quizTop
-  const max = Math.max(...shown.map((x) => x.score), 0.0001)
 
   return (
     <div className="stack-m" style={{ maxWidth: 860 }}>
@@ -132,20 +123,7 @@ export default function Results({ justFinished, onRedoQuiz }: { justFinished: bo
       {shown.length === 0 ? (
         <div className="card"><b>No tracks yet.</b><p className="small muted">Answer the quiz questions to see your tracks.</p><button className="btn sm" onClick={redo}>Go to the quiz</button></div>
       ) : (
-        <div className="grid g3">
-          {shown.map((t, i) => (
-            <article key={t.key} className="card stack-s view">
-              <div className="row between"><span className="chip teal num">#{i + 1}</span></div>
-              <h3>{t.name}</h3>
-              {t.description && <p className="small muted">{t.description}</p>}
-              <div className="bar" style={{ marginTop: 4 }} aria-label={`Relative score ${Math.round((t.score / max) * 100)} out of 100`}>
-                <i style={{ width: `${Math.max(8, Math.round((t.score / max) * 100))}%` }} />
-              </div>
-              {t.reason ? <p className="small" style={{ color: 'var(--ink2)' }}><b>Why:</b> {t.reason}</p>
-                : asking ? <p className="small muted">Writing your explanation…</p> : null}
-            </article>
-          ))}
-        </div>
+        <TrackCards tracks={shown} writing={asking} />
       )}
 
       {ai && ai.followups.length > 0 && (

@@ -12,6 +12,8 @@ import ResetPassword from './pages/auth/ResetPassword'
 import ComingNext from './pages/app/ComingNext'
 import SystemCheck from './pages/app/SystemCheck'
 import Onboarding from './pages/onboarding/Onboarding'
+import Dashboard from './pages/app/Dashboard'
+import History from './pages/app/History'
 
 export default function App() {
   return (
@@ -30,8 +32,8 @@ export default function App() {
 
         {/* Private (sign-in required) */}
         <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
-        <Route path="/dashboard" element={<RequireAuth><ComingNext title="Dashboard" text="Your dashboard is coming soon." /></RequireAuth>} />
-        <Route path="/history" element={<RequireAuth><ComingNext title="History" text="Your saved results will appear here." /></RequireAuth>} />
+        <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+        <Route path="/history" element={<RequireAuth><History /></RequireAuth>} />
         <Route path="/pricing/upgrade" element={<RequireAuth><ComingNext title="Upgrade" text="Upgrading is coming soon." /></RequireAuth>} />
         <Route path="/system-check" element={<RequireAuth><SystemCheck /></RequireAuth>} />
 

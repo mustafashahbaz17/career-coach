@@ -76,7 +76,7 @@ Opened from the reset email (Supabase signs the student in from the link). Saves
 - After the last question: "Working out your career tracks…", sets `onboarding_step = 'done'`, then shows Results.
 - **Reads:** `quiz_questions`, `quiz_options`, `quiz_responses` (own). **Writes:** `quiz_responses` (own), `profiles.onboarding_step`.
 
-**Results (`Results.tsx`)**
+**Results (`Results.tsx`, cards from `src/components/TrackCards.tsx`, shared with the dashboard)**
 - Shows the top 3 tracks from **`quiz_track_scores`** (the view that adds up quiz weights — no AI) joined to **`career_tracks`** for names and descriptions, with a bar for relative score.
 - Calls n8n **`onboard-tracks`** (replaces the brief's placeholder `fetchAiTrackReasons()`). On success it shows n8n's 3 tracks with their AI `reason`, the confidence, and — if `needs_followup` — the follow-up questions in a "Help us get this right" card. On failure the quiz-score tracks stay on screen with the error message and **Try again**.
 - Coming back later shows the saved **`interest_results`** instead of calling the AI again (so it doesn't use up the monthly limit).
@@ -85,9 +85,24 @@ Opened from the reset email (Supabase signs the student in from the link). Saves
 
 *Tested* with a fake Supabase and fake n8n on desktop and phone: validation, LinkedIn import filling only empty fields, CGPA 4.5 on a 4.0 scale rejected, profile saved, refresh resumes the quiz, multi-choice limit, answers saved to `quiz_responses`, refresh mid-quiz resumes at the right question, AI failure → fallback + Try again → AI reasons and follow-ups. No JavaScript errors.
 
-### `/dashboard`, `/history`, `/pricing/upgrade` — Temporary (`src/pages/app/ComingNext.tsx`)
-Placeholders until Steps 7 and 8. They show "Signed in as …" and the student's plan from **`profiles`**, which proves sign-in and data reading work.
-- **Reads:** `profiles` (own row). **Writes / webhooks:** none.
+### `/dashboard` — Dashboard (`src/pages/app/Dashboard.tsx`)
+Where a student lands after onboarding. Greets them by first name and shows their **plan** as a badge (links to Pricing).
+- **Profile summary:** university, degree and major, current year, graduation year — with **Edit details**, which opens the About-you form at `/onboarding?edit=1` (saving there returns to the dashboard and never sends them back through the quiz).
+- **Career tracks:** the latest **`interest_results`** row (3 tracks with the AI's reasons and the date). If there isn't one yet, the top 3 from **`quiz_track_scores`**, labelled "Based on your quiz answers". No quiz yet → "No career tracks yet" with a button to take it.
+- **Coming soon** cards: Opportunity matches, Tracker, CV studio, Interview practice (Premium), Vent space.
+- If onboarding isn't finished, a "Finish setting up" banner links back to it.
+- **Reads:** `profiles` (own), `interest_results` (own), `quiz_track_scores` (own), `career_tracks`. **Writes / webhooks:** none.
+
+### `/history` — History (`src/pages/app/History.tsx`)
+Everything the student has run, **newest first**: career-track reports (**`interest_results`**) and LinkedIn imports (**`linkedin_imports`**), each with its date and status (Imported / Profile empty or private / Didn't work / Didn't finish). Tap a row to open it: a report shows its 3 tracks with reasons and confidence; an import shows what it found (name, university, degree, skills, roles) or a plain explanation of what went wrong. Empty state: "Nothing here yet" with a button to get career tracks.
+- **Reads:** `interest_results` (own), `linkedin_imports` (own), `career_tracks`. **Writes / webhooks:** none.
+
+**Only your own data:** every query on these pages filters by the signed-in student's id, and row-level security in Supabase blocks other students' rows anyway.
+
+*Tested* with a fake Supabase (a student with results, a brand-new student, and a quiz-only student) on desktop and phone: 36/36 checks pass, including the Edit details round trip and that every query asks only for the student's own rows.
+
+### `/pricing/upgrade` — Temporary (`src/pages/app/ComingNext.tsx`)
+Placeholder until upgrades are wired to n8n.
 
 ### `/system-check` — Team-only test page (`src/pages/app/SystemCheck.tsx`)
 Not linked anywhere. Shows which n8n base URL the site is using and has a button that calls a workflow that doesn't exist — it should show the polite `ai_unavailable` message with Try again, proving the failure handling works. Handy for Step 9 and for rehearsing the "we'll break something" part of the demo.
@@ -98,4 +113,4 @@ Not linked anywhere. Shows which n8n base URL the site is using and has a button
 ### Top bar and footer (`src/components/PublicLayout.tsx`)
 Wraps every page except the account pages.
 - **Signed out:** logo, Pricing, Sign in, Get started free (on phones Pricing is hidden in the bar and the button reads "Start free", so it fits on one line).
-- **Signed in:** the student's email and a **Sign out** button (on phones the email shows in a line under the bar).
+- **Signed in:** **Dashboard / History / Pricing** links (the current page is highlighted), the student's email and a **Sign out** button. On phones the links and "Signed in as …" sit in a row under the bar.
