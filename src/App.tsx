@@ -10,6 +10,7 @@ import SignUp from './pages/auth/SignUp'
 import ForgotPassword from './pages/auth/ForgotPassword'
 import ResetPassword from './pages/auth/ResetPassword'
 import ComingNext from './pages/app/ComingNext'
+import SystemCheck from './pages/app/SystemCheck'
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/dashboard" element={<RequireAuth><ComingNext title="Dashboard" text="Your dashboard is coming soon." /></RequireAuth>} />
         <Route path="/history" element={<RequireAuth><ComingNext title="History" text="Your saved results will appear here." /></RequireAuth>} />
         <Route path="/pricing/upgrade" element={<RequireAuth><ComingNext title="Upgrade" text="Upgrading is coming soon." /></RequireAuth>} />
+        <Route path="/system-check" element={<RequireAuth><SystemCheck /></RequireAuth>} />
 
         <Route path="*" element={<Placeholder title="Page not found" text="We couldn't find that page." />} />
       </Route>

@@ -19,6 +19,16 @@ Updated whenever a page changes. Read this before the presentation — you'll be
 - **`src/auth/RequireAuth.tsx`** — guards private pages. A signed-out visitor is sent to `/signin` with a "Please sign in to continue" note.
 - **`src/auth/authErrors.ts`** — turns Supabase's technical errors into plain messages (wrong password, email already used, weak password, email not confirmed, too many attempts, no internet).
 
+## Talking to n8n (`src/lib/callWorkflow.ts`, `src/components/ErrorNotice.tsx`)
+
+- **`callWorkflow(path, body, options)`** is the ONE way the website calls n8n. It sends `POST` to `VITE_N8N_BASE_URL + '/' + path` with a JSON body and the header `Authorization: Bearer <student's Supabase access token>` (n8n checks this token to know who is calling).
+- **Timeout:** 60 seconds by default; pages pass `{ timeoutMs: 90000 }` for `linkedin-import`.
+- **It never throws.** It always returns `{ ok: true, data }` or `{ ok: false, code, message, retryable, used?, limit? }`, so a page can't crash because n8n is down.
+- **Rules:** HTTP 401 → `not_signed_in` (the student is signed out and sent to sign-in). A reply with `ok: false` → n8n's own code. Timeout, network error, CORS block, a missing workflow (404) or a reply that isn't JSON → `ai_unavailable`.
+- **Messages** are exactly the ones in the Shared contracts (e.g. `ai_unavailable` → "Our AI is having a moment. Your work is saved; please try again."; `limit_reached` with limit 0 → "This is part of the Premium plan.").
+- **`<ErrorNotice>`** shows the message, a **Try again** button when `retryable` is true, a **See plans** button for limits, and a **Sign in** button when signed out.
+- Tested against fake n8n replies for every case in the contract (success, 401, each error code, 404, bad JSON, timeout, network failure, missing base URL): 13/13 pass.
+
 ## Public pages (no sign-in needed)
 
 ### `/` — Landing page (`src/pages/Landing.tsx`)
@@ -53,6 +63,10 @@ Opened from the reset email (Supabase signs the student in from the link). Saves
 ### `/onboarding`, `/dashboard`, `/history`, `/pricing/upgrade` — Temporary (`src/pages/app/ComingNext.tsx`)
 Placeholders until Steps 5, 7 and 8. They show "Signed in as …" and the student's plan from **`profiles`**, which proves sign-in and data reading work.
 - **Reads:** `profiles` (own row). **Writes / webhooks:** none.
+
+### `/system-check` — Team-only test page (`src/pages/app/SystemCheck.tsx`)
+Not linked anywhere. Shows which n8n base URL the site is using and has a button that calls a workflow that doesn't exist — it should show the polite `ai_unavailable` message with Try again, proving the failure handling works. Handy for Step 9 and for rehearsing the "we'll break something" part of the demo.
+- **Webhooks:** calls a made-up path on purpose. **Reads / writes:** nothing.
 
 ## Shared frame
 
