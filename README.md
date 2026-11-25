@@ -2,6 +2,8 @@
 
 A recruitment-season co-pilot for university students in Pakistan. Gen AI course final project.
 
+**Live site:** https://career-coach-pink.vercel.app
+
 - **Website:** React + TypeScript (Vite), hosted on Vercel. Written by an AI coding tool (Claude); no code written by hand.
 - **Sign-in and database:** Supabase.
 - **AI work:** the course n8n, called through webhooks.
