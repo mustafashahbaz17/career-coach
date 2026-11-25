@@ -218,7 +218,7 @@ Change anything in this section only when all three agree, then update all three
 
 ```
 /            website code (managed by Lovable)
-/supabase    SQL files, numbered: 01_supabase_onboarding.sql, 02_core_tables.sql, 03_...
+/supabase    SQL files, numbered: 01_supabase_onboarding.sql, 02_core_tables.sql, 03_opportunity_scout.sql, 04_...
 /n8n         exported workflow JSON, one file per workflow, re-exported after every change
 /docs        these briefs, PAGES.md, the proposal, test sets, report drafts
 ```
@@ -241,13 +241,16 @@ own rows; n8n uses the service key.
 | `ai_runs` | One row per workflow run using a model or paid API, success or failure | n8n |
 | `plan_limits` | Monthly limit per plan and feature (0 = not on that plan) | Data lead |
 | `monthly_usage` (view) | This month's successful runs per student and feature | (computed) |
-| `opportunities` | Curated, verified programmes with eligibility rules | Data lead |
+| `opportunities` | Curated, verified programmes with eligibility rules | Data lead; admins (approving scout finds) |
+| `opportunity_sources` | Careers pages and feeds the opportunity scout reads | Data lead / admins; n8n updates `last_scouted_at`, `last_status`, `last_error` |
+| `opportunity_candidates` | Openings the scout found, waiting for an admin to approve or reject | n8n via `scout_add_candidate()` (service key); admins via `approve_opportunity_candidate()` / `reject_opportunity_candidate()` |
+| `opportunity_candidates_pending` (view) | Pending candidates whose deadline hasn't passed, soonest first | (computed) |
 
 ### Feature names
 
 Used in `ai_runs.workflow`, `plan_limits.feature` and the limits check, spelled exactly:
 `linkedin-import`, `onboard-tracks`, `cv-review`, `coach-message`, `interview-session`,
-`negotiation-draft`, `vent-message`.
+`negotiation-draft`, `vent-message`, `opportunity-scout` (scheduled job: logged in `ai_runs` with `user_id` null, no `plan_limits` rows).
 
 ### Website ⇄ n8n webhook contract
 
@@ -286,6 +289,10 @@ Used in `ai_runs.workflow`, `plan_limits.feature` and the limits check, spelled 
      "confidence": 0.0-1.0, "needs_followup": true|false, "followup_questions": ["..."] (0 to 2)}`.
    - Writes `interest_results` and `ai_runs`.
    - Possible codes: `not_signed_in`, `bad_input` (quiz not finished), `limit_reached`, `ai_unavailable`.
+
+**Scheduled workflows** (no webhook, agreed 25 Nov 2026):
+
+- **`opportunity-scout`**: Mon and Thu 10:00 PKT. Reads active `opportunity_sources`, the AI extracts openings with an exact quote from the page, n8n keeps only rows whose quote is on the page, then calls `POST /rest/v1/rpc/scout_add_candidate` (reply `added` / `duplicate` / `expired`). Nothing reaches students until an admin approves it on the admin page. Spec: shared in the group chat on 25 Nov 2026.
 
 ### Definition of done (for any feature)
 
