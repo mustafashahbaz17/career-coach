@@ -11,6 +11,7 @@ import ForgotPassword from './pages/auth/ForgotPassword'
 import ResetPassword from './pages/auth/ResetPassword'
 import ComingNext from './pages/app/ComingNext'
 import SystemCheck from './pages/app/SystemCheck'
+import Onboarding from './pages/onboarding/Onboarding'
 
 export default function App() {
   return (
@@ -28,7 +29,7 @@ export default function App() {
         <Route path="/privacy" element={<Placeholder title="Privacy" text="Privacy policy coming soon." />} />
 
         {/* Private (sign-in required) */}
-        <Route path="/onboarding" element={<RequireAuth><ComingNext title="Let’s set up your season" text="Onboarding (your details and the interest quiz) is being built next." /></RequireAuth>} />
+        <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
         <Route path="/dashboard" element={<RequireAuth><ComingNext title="Dashboard" text="Your dashboard is coming soon." /></RequireAuth>} />
         <Route path="/history" element={<RequireAuth><ComingNext title="History" text="Your saved results will appear here." /></RequireAuth>} />
         <Route path="/pricing/upgrade" element={<RequireAuth><ComingNext title="Upgrade" text="Upgrading is coming soon." /></RequireAuth>} />

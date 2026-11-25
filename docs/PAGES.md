@@ -60,8 +60,33 @@ Opened from the reset email (Supabase signs the student in from the link). Saves
 
 ## Private pages (sign-in required)
 
-### `/onboarding`, `/dashboard`, `/history`, `/pricing/upgrade` — Temporary (`src/pages/app/ComingNext.tsx`)
-Placeholders until Steps 5, 7 and 8. They show "Signed in as …" and the student's plan from **`profiles`**, which proves sign-in and data reading work.
+### `/onboarding` — Set-up in 2 steps, then results (`src/pages/onboarding/`)
+`Onboarding.tsx` picks the screen from **`profiles.onboarding_step`**: `'basic_info'` → About you, `'quiz'` → Quiz, `'done'` → Results. So closing the tab and coming back resumes in the right place. A progress bar shows **1. About you  2. Interest quiz**. `/onboarding?edit=1` reopens the About-you form for a student who has finished (for "Edit details" on the dashboard).
+
+**Step 1 — About you (`AboutYou.tsx`, lists and rules in `aboutYouData.ts`)**
+- *Optional LinkedIn import:* checks the link looks like `linkedin.com/in/…`, then calls n8n **`linkedin-import`** via `callWorkflow` (90-second timeout) with "Reading your public profile, this can take up to a minute...". It fills in **only empty fields** (never what the student typed) and tags them "from LinkedIn". Errors: bad link, private/empty profile, limit reached, or anything else → "LinkedIn import isn't working right now…" with Try again. The form always works without it. The link is saved to `profiles.linkedin_url`.
+- *The form:* You (name, city, year of birth), Education (university with search, degree, major, current year, graduation year, CGPA + 4.0/5.0 scale — a CGPA above the scale is rejected), Skills and experience (up to 15 skill tags, languages, experience rows), and a collapsed **"Optional, used only to check eligibility"** section (gender, nationality) with the exact helper text from the brief.
+- *Continue:* checks every field, then **updates the student's `profiles` row** and sets `onboarding_step = 'quiz'`. Never sends `plan` or `is_admin`. If saving fails: "Something went wrong saving that. Please try again." with Try again, and nothing typed is lost.
+- **Reads/writes:** `profiles` (own row). **Webhooks:** `linkedin-import`.
+
+**Step 2 — Interest quiz (`Quiz.tsx`)**
+- Loaded **from the database**: `quiz_questions` (active, by position) and `quiz_options` (by position). One question per screen with "Question 3 of 10", a progress bar, Back and Next.
+- `single` = pick one; `multi` = pick up to `max_choices` (enforced, with a message); `text` = up to 400 characters, with **Skip** when `required = false`.
+- On **Next**: deletes the student's `quiz_responses` rows for that question, then inserts the new ones (one per option, or one `text_answer`). A refresh resumes at the first unanswered question, with saved answers pre-selected. Back from question 1 returns to the About-you form.
+- After the last question: "Working out your career tracks…", sets `onboarding_step = 'done'`, then shows Results.
+- **Reads:** `quiz_questions`, `quiz_options`, `quiz_responses` (own). **Writes:** `quiz_responses` (own), `profiles.onboarding_step`.
+
+**Results (`Results.tsx`)**
+- Shows the top 3 tracks from **`quiz_track_scores`** (the view that adds up quiz weights — no AI) joined to **`career_tracks`** for names and descriptions, with a bar for relative score.
+- Calls n8n **`onboard-tracks`** (replaces the brief's placeholder `fetchAiTrackReasons()`). On success it shows n8n's 3 tracks with their AI `reason`, the confidence, and — if `needs_followup` — the follow-up questions in a "Help us get this right" card. On failure the quiz-score tracks stay on screen with the error message and **Try again**.
+- Coming back later shows the saved **`interest_results`** instead of calling the AI again (so it doesn't use up the monthly limit).
+- "Your full report with matched opportunities is coming next." + **Go to my dashboard**.
+- **Reads:** `career_tracks`, `quiz_track_scores`, `interest_results` (own). **Webhooks:** `onboard-tracks`.
+
+*Tested* with a fake Supabase and fake n8n on desktop and phone: validation, LinkedIn import filling only empty fields, CGPA 4.5 on a 4.0 scale rejected, profile saved, refresh resumes the quiz, multi-choice limit, answers saved to `quiz_responses`, refresh mid-quiz resumes at the right question, AI failure → fallback + Try again → AI reasons and follow-ups. No JavaScript errors.
+
+### `/dashboard`, `/history`, `/pricing/upgrade` — Temporary (`src/pages/app/ComingNext.tsx`)
+Placeholders until Steps 7 and 8. They show "Signed in as …" and the student's plan from **`profiles`**, which proves sign-in and data reading work.
 - **Reads:** `profiles` (own row). **Writes / webhooks:** none.
 
 ### `/system-check` — Team-only test page (`src/pages/app/SystemCheck.tsx`)
