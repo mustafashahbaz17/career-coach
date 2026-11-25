@@ -1,0 +1,26 @@
+/* Small additions on top of design.css, for pieces the HTML design didn't have. */
+
+/* FAQ accordion (uses the browser's built-in <details> element, so it works without JavaScript) */
+.faq details{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:0 18px;transition:border-color var(--t)}
+.faq details+details{margin-top:10px}
+.faq details[open]{border-color:#CFE9E5}
+.faq summary{cursor:pointer;list-style:none;font-weight:700;padding:16px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:48px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-size:22px;font-weight:600;color:var(--teal-d);transition:transform var(--t) var(--ease)}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{margin:0 0 16px;color:var(--ink2)}
+
+/* Who-it's-for list */
+.who-list{margin:8px 0 0;padding-left:18px}
+.who-list li{margin:4px 0}
+
+/* Section spacing on public pages */
+.pub-sec{margin-top:44px}
+
+/* "How it works" with 4 steps instead of the design's 5 */
+.journey.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:900px){.journey.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:460px){.journey.four{grid-template-columns:minmax(0,1fr)}}
+
+/* Simple centred placeholder pages */
+.placeholder{max-width:560px;margin:60px auto;text-align:center}
