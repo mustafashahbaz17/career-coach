@@ -5,6 +5,7 @@ import PublicLayout from './components/PublicLayout'
 import RequireAuth from './auth/RequireAuth'
 import Landing from './pages/Landing'
 import Placeholder from './pages/Placeholder'
+import Pricing from './pages/Pricing'
 import SignIn from './pages/auth/SignIn'
 import SignUp from './pages/auth/SignUp'
 import ForgotPassword from './pages/auth/ForgotPassword'
@@ -27,7 +28,7 @@ export default function App() {
       <Route element={<PublicLayout />}>
         {/* Public */}
         <Route path="/" element={<Landing />} />
-        <Route path="/pricing" element={<Placeholder title="Pricing" text="The full plan comparison is coming soon. For now, see the plans summary on the home page." />} />
+        <Route path="/pricing" element={<Pricing />} />
         <Route path="/privacy" element={<Placeholder title="Privacy" text="Privacy policy coming soon." />} />
 
         {/* Private (sign-in required) */}
