@@ -43,8 +43,14 @@ Updated whenever a page changes. Read this before the presentation — you'll be
 Tells a stranger who Career Coach is for, what it does and what it costs. Sections: hero with a **Sample**-labelled tracker preview, who it's for, how it works in 4 steps, three honesty promises, plans summary (Free PKR 0, Pro PKR 499 est., Premium PKR 999 est.), and an FAQ.
 - **Reads / writes / webhooks:** none. No testimonials, user counts or partner logos (course rule).
 
-### `/pricing`, `/privacy` — Placeholders (`src/pages/Placeholder.tsx`)
-"Coming soon" pages so no link is broken. Pricing is built in Step 8.
+### `/pricing` — Plans (`src/pages/Pricing.tsx`)
+Three plan cards: **Free (PKR 0)**, **Pro (PKR 499/month, est.)**, **Premium (PKR 999/month, est.)**. Each card lists its monthly limits, **read from the `plan_limits` table** — nothing is typed into the page, so the numbers always match what n8n enforces. Feature names map to friendly labels (`cv-review` → "CV reviews", etc.); `0` shows as "—" (not on that plan). A signed-in student's current plan is outlined and labelled "Your plan"; **Upgrade** buttons say "Coming soon" until the upgrade workflow exists. Signed-out visitors see the plans and prices with Start free buttons.
+- **Note:** `plan_limits` is currently readable by **signed-in accounts only** (data lead's rule), so signed-out visitors see "Sign in to see each plan's exact monthly limits" instead of the numbers. If the data lead allows `anon` to read it, the numbers appear for everyone with no website change.
+- **Reads:** `plan_limits`, `profiles.plan` (own). **Writes / webhooks:** none.
+- *Tested:* all 21 limits match `supabase/02_core_tables.sql` exactly, on desktop and phone; plus signed-out view, current-plan highlight, Upgrade → Coming soon, and a load failure → message + Try again.
+
+### `/privacy` — Placeholder (`src/pages/Placeholder.tsx`)
+"Privacy policy coming soon."
 
 ### Any other address — "Page not found"
 
