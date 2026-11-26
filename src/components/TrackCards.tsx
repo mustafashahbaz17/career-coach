@@ -9,7 +9,7 @@ export default function TrackCards({ tracks, writing }: { tracks: ShownTrack[]; 
       {tracks.map((t, i) => {
         const pct = Math.round((t.score / max) * 100)
         return (
-          <article key={t.key} className="card stack-s view">
+          <article key={t.key} className="card stack-s">
             <div className="row between"><span className="chip teal num">#{i + 1}</span></div>
             <h3>{t.name}</h3>
             {t.description && <p className="small muted">{t.description}</p>}

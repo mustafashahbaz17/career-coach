@@ -1,6 +1,8 @@
 // The public home page at "/". Says who Career Coach is for, what it does and what it costs.
 // It reads nothing from the database and calls no n8n webhooks.
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useParallax } from '../lib/useMotion'
 import Icon from '../components/Icon'
 
 // Sample cards for the dark "tracker preview" in the hero. Clearly labelled Sample on screen.
@@ -38,18 +40,45 @@ const FAQ = [
   },
 ]
 
+// A small 4-point sparkle used as a decorative accent next to a few headings.
+function Sparkle({ orange }: { orange?: boolean }) {
+  return (
+    <svg className={`sparkle ${orange ? 'o' : ''}`} viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d="M12 0c.6 5.6 3.4 9.4 12 12-8.6 2.6-11.4 6.4-12 12-.6-5.6-3.4-9.4-12-12C8.6 9.4 11.4 5.6 12 0z" />
+    </svg>
+  )
+}
+
+// Soft curved edge for the lighter band in the middle of the page.
+function Wave({ className }: { className: string }) {
+  return (
+    <svg className={className} viewBox="0 0 1440 48" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 48 C 320 8, 620 0, 900 14 S 1300 44, 1440 20 L 1440 48 Z" />
+    </svg>
+  )
+}
+
 function readyColour(v: number) {
   return v >= 70 ? 'var(--teal)' : v >= 45 ? 'var(--gold)' : 'var(--coral)'
 }
 
 export default function Landing() {
+  const [root, setRoot] = useState<HTMLDivElement | null>(null)
+  useParallax(root) // background glows drift slightly slower than the page as you scroll
+
   return (
-    <div className="wrap">
-      {/* 1. Hero */}
+    <div className="wrap landing" ref={setRoot}>
+      {/* 1. Hero (decorations behind it: soft glows and fine rings) */}
+      <div className="hero-shell">
+      <div className="deco orb a" aria-hidden="true" />
+      <div className="deco orb b" aria-hidden="true" />
+      <div className="deco orb c" aria-hidden="true" />
+      <div className="deco halo r1" aria-hidden="true" />
+      <div className="deco halo r2" aria-hidden="true" />
       <section className="hero">
         <div className="stack-m">
           <span className="chip teal">For final- and penultimate-year students in Pakistan</span>
-          <h1>Your recruitment season, handled.</h1>
+          <h1>Your recruitment season, <span className="hl-accent">handled.</span></h1>
           <p className="lead">
             Find the programmes you're eligible for, tailor your CV to each, practise the interview, and never miss a deadline. <b>Free to start.</b>
           </p>
@@ -63,6 +92,11 @@ export default function Landing() {
           </div>
         </div>
 
+        <div className="hero-board-wrap">
+        {/* small floating UI cards around the sample board (decorative) */}
+        <div className="float-ui f1" aria-hidden="true"><span className="ic o"><Icon name="board" size={13} /></span>Reminder set · 3 days before</div>
+        <div className="float-ui f2" aria-hidden="true"><span className="ic g"><Icon name="check" size={13} /></span>CV bullet approved</div>
+        <div className="float-ui f3" aria-hidden="true"><span className="ic y"><Icon name="mic" size={13} /></span>Practice answer scored</div>
         <div className="hero-board" aria-label="Sample preview of the application tracker">
           <div className="row between" style={{ marginBottom: 12 }}>
             <b>A student's season</b>
@@ -90,7 +124,15 @@ export default function Landing() {
           </div>
           <div className="small" style={{ color: 'var(--on-stage-2)', marginTop: 6 }}>Readiness = CV match + practice done + days left</div>
         </div>
+        </div>
       </section>
+      </div>
+
+      {/* Sections 2–3 and the promises sit on a lighter band with curved edges */}
+      <div className="band">
+      <Wave className="top" />
+      <div className="deco orb d" aria-hidden="true" />
+      <div className="deco orb e" aria-hidden="true" />
 
       {/* 2. Who it's for */}
       <section className="pub-sec grid g2" style={{ alignItems: 'start' }}>
@@ -111,7 +153,7 @@ export default function Landing() {
 
       {/* 3. How it works */}
       <section className="pub-sec stack-m">
-        <h2>How it works</h2>
+        <h2>How it works<Sparkle /></h2>
         <div className="journey four">
           {STEPS.map((s, i) => (
             <div className="step" key={s.title}>
@@ -140,12 +182,15 @@ export default function Landing() {
           <p className="muted small">Anything we haven't checked by hand is labelled Sample, and every estimate says it's an estimate.</p>
         </div>
       </section>
+      <Wave className="bot" />
+      </div>
 
       {/* 4. Plans summary */}
-      <section id="plans" className="pub-sec stack-m">
+      <section id="plans" className="pub-sec stack-m plans-shell">
+        <div className="deco orb f" aria-hidden="true" />
         <div className="sec-title">
           <div>
-            <h2>Plans</h2>
+            <h2>Plans<Sparkle orange /></h2>
             <p className="muted">Prices are early estimates we're testing with students.</p>
           </div>
           <Link className="btn sm" to="/pricing">Compare plans</Link>

@@ -10,6 +10,13 @@ Updated whenever a page changes. Read this before the presentation — you'll be
 - **`src/main.tsx`** starts the app, loads the styles, and wraps everything in the sign-in tracker (`AuthProvider`).
 - **`src/styles/design.css`** is the design system from our HTML design file (fonts, buttons, cards, layout). `src/styles/extra.css` holds a few additions.
 - **`src/styles/theme.css`** is the current look, loaded last: a **deep green background with white cards in front and a small orange accent** (the logo dot, deadline countdowns, the featured plan, and a dot on the page you're on). It works with colour variables: the green page sets light-on-dark text, and every white surface switches back to dark-on-light. Delete its import in `src/main.tsx` to go back to the old light look.
+- **`src/styles/motion.css` + `src/lib/useMotion.ts`** add the motion and depth, with no animation library:
+  - *Scroll reveal:* headings and cards fade and slide in as they scroll into view, with a small stagger for rows of cards. `useScrollReveal` finds them by CSS selector (so pages need no changes), also catches content that loads later, and animates each element once.
+  - *Page fades:* each new page fades in (the page frame is keyed by the address).
+  - *Depth:* a faint dot grid and film grain on the green, soft glows behind page titles, and on the landing page: glowing orbs and fine halo rings in the hero (moving slightly slower than the page — parallax via `useParallax`), a lighter band with curved edges around the middle sections, and small sparkle accents.
+  - *Hero:* the last word of the headline has a soft green sheen, and three small floating cards ("Reminder set", "CV bullet approved", "Practice answer scored") sit around the Sample tracker board on desktop (hidden on phones; marked `aria-hidden` because they're decoration).
+  - *Interactions:* cards lift with a deeper shadow and a soft cursor spotlight, icons nudge, buttons lift and press, primary buttons get a light sheen, quiz ticks pop, and the orange "you are here" dot pops in on the nav.
+  - *Accessibility & performance:* only `opacity` and `transform` are animated (no layout shift); everything is off when the visitor has "reduce motion" turned on; decorations never cause sideways scrolling.
 - **`vercel.json`** tells Vercel to send every address to the app, so refreshing on `/pricing` doesn't show a 404.
 - **Secrets:** the website only ever uses the Supabase URL, the publishable/anon key and the n8n base URL, set as environment variables in Vercel (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_N8N_BASE_URL`). No other keys are in this code.
 

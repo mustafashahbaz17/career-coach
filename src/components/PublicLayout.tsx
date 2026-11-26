@@ -1,7 +1,9 @@
 // The frame around every page except sign-in/sign-up: top bar and footer.
 // Signed out: Pricing, Sign in, Get started free.
 // Signed in: Dashboard, History, Pricing links, the student's email and a Sign out button.
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useCardSpotlight, useScrollReveal } from '../lib/useMotion'
 import Logo from './Logo'
 import { homeFor, useAuth } from '../auth/AuthProvider'
 
@@ -20,6 +22,10 @@ function AppLinks() {
 export default function PublicLayout() {
   const { session, profile, signOut } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const [main, setMain] = useState<HTMLElement | null>(null)
+  useScrollReveal(main, pathname) // fade/slide headings and cards in as they scroll into view
+  useCardSpotlight() // soft glow that follows the mouse on cards
 
   async function onSignOut() {
     await signOut()
@@ -63,8 +69,9 @@ export default function PublicLayout() {
         </div>
       )}
 
-      <main>
-        <div className="view">
+      <main ref={setMain}>
+        {/* key = the page address, so each new page fades in */}
+        <div className="page-fade" key={pathname}>
           <Outlet />
         </div>
       </main>

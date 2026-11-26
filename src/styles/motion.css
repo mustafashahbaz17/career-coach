@@ -1,0 +1,171 @@
+/* ============================================================================
+   MOTION & DEPTH — visual polish on top of design.css + theme.css.
+   No layout changes: everything here uses opacity/transform, background layers
+   and pseudo-elements, so nothing shifts. All of it is switched off for visitors
+   with "reduce motion" (see the bottom of this file).
+   ============================================================================ */
+
+:root{ --ease-out:cubic-bezier(.16,1,.3,1); --ease-spring:cubic-bezier(.34,1.4,.5,1) }
+/* decorative glows reach past the screen edge; never let them cause sideways scrolling (clip keeps the sticky top bar working) */
+html{overflow-x:clip}
+
+/* ---------- 1. Background depth: dot grid + film grain on the green stage ---------- */
+body::before,body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1}
+body::before{ /* dot grid, fading out towards the bottom */
+  background-image:radial-gradient(rgba(255,255,255,.075) 1px,transparent 1.3px);
+  background-size:24px 24px;
+  -webkit-mask-image:radial-gradient(120% 70% at 50% 0%,#000 0%,transparent 75%);
+          mask-image:radial-gradient(120% 70% at 50% 0%,#000 0%,transparent 75%);
+}
+body::after{ /* fine grain */
+  opacity:.06;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* soft glow behind every page title (app pages) */
+.page-head{position:relative}
+.page-head::before{content:"";position:absolute;left:-160px;top:-180px;width:520px;height:440px;pointer-events:none;z-index:-1;
+  background:radial-gradient(closest-side,rgba(61,220,151,.13),transparent)}
+
+/* ---------- 2. Scroll reveal (classes added by useScrollReveal) ---------- */
+.rv{opacity:0;transform:translate3d(0,18px,0);transition:opacity .7s var(--ease-out),transform .8s var(--ease-out);transition-delay:calc(var(--rv-i,0) * 80ms);will-change:opacity,transform}
+.rv.rv-in{opacity:1;transform:none}
+/* hero items come in a touch slower and further */
+.hero > .stack-m > .rv{transform:translate3d(0,22px,0)}
+.hero-board-wrap.rv{transform:translate3d(0,26px,0) scale(.985)}
+.hero-board-wrap.rv.rv-in{transform:none}
+
+/* smooth fade between pages */
+.page-fade{animation:pagein .45s var(--ease-out) both}
+@keyframes pagein{from{opacity:0;transform:translate3d(0,8px,0)}}
+
+/* ---------- 3. Cards: lift, deeper shadow, cursor spotlight ---------- */
+.grid > .card,.grid > article,.journey .step,.faq details,.price{
+  transition:transform .45s var(--ease-out),box-shadow .45s var(--ease-out),border-color .3s,opacity .7s var(--ease-out);
+}
+@media (hover:hover){
+  .grid > .card:hover,.grid > article:hover,.journey .step:hover,.price:hover{
+    transform:translateY(-5px);
+    box-shadow:0 22px 44px -16px rgba(0,0,0,.5),0 6px 14px -6px rgba(0,0,0,.18);
+  }
+  .faq details:hover{transform:translateY(-2px);box-shadow:0 14px 30px -14px rgba(0,0,0,.45)}
+  /* spotlight that follows the cursor (position set by useCardSpotlight) */
+  .grid > .card:hover,.grid > article:hover,.journey .step:hover{
+    background-image:radial-gradient(280px circle at var(--mx,50%) var(--my,30%),rgba(15,110,90,.075),transparent 65%);
+  }
+}
+.rv.rv-in.grid > .card,.grid > .card.rv.rv-in{transition-delay:0s}
+
+/* icons on cards nudge when the card is hovered */
+.card svg,.journey .step .n{transition:transform .45s var(--ease-spring)}
+@media (hover:hover){
+  .grid > .card:hover svg{transform:translateY(-1px) rotate(-6deg) scale(1.08)}
+  .journey .step:hover .n{transform:scale(1.12) rotate(-6deg)}
+}
+
+/* FAQ / history: content glides in when opened */
+.faq details[open] > :not(summary){animation:pagein .35s var(--ease-out) both}
+
+/* ---------- 4. Buttons & micro-interactions ---------- */
+.btn{transition:transform .25s var(--ease-out),box-shadow .3s var(--ease-out),background-color .25s,border-color .25s,color .25s}
+@media (hover:hover){ .btn:not([disabled]):hover{transform:translateY(-1px)} }
+.btn:not([disabled]):active{transform:translateY(0) scale(.97);transition-duration:.08s}
+/* primary buttons: a soft glow and a light sheen that sweeps across on hover */
+.btn.pri{position:relative;overflow:hidden;isolation:isolate}
+.btn.pri::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.45) 50%,transparent 70%);
+  transform:translateX(-120%);transition:transform .8s var(--ease-out)}
+@media (hover:hover){
+  .btn.pri:not([disabled]):hover::after{transform:translateX(120%)}
+  .btn.pri:not([disabled]):hover{box-shadow:0 10px 26px -10px rgba(61,220,151,.55)}
+}
+/* arrows in button labels slide a little */
+.btn .arrow{display:inline-block;transition:transform .3s var(--ease-out)}
+.btn:hover .arrow{transform:translateX(3px)}
+
+/* nav: the orange "you are here" dot pops in */
+.pubnav a.btn.active::after{animation:dotin .5s var(--ease-spring) both}
+@keyframes dotin{from{transform:scale(0)}}
+.pubnav .btn.ghost{transition:color .25s,background-color .25s,transform .25s var(--ease-out)}
+
+/* inputs: gentle hover + focus glow */
+.inp{transition:border-color .25s,box-shadow .3s var(--ease-out),background-color .25s}
+@media (hover:hover){ .inp:hover:not(:focus):not([disabled]){border-color:#B5CCC5} }
+
+/* quiz options: lift a hair, and the tick pops when chosen */
+.opt{transition:border-color .25s,background-color .25s,transform .3s var(--ease-out),box-shadow .3s}
+@media (hover:hover){ .opt:hover{transform:translateY(-1px);box-shadow:0 8px 18px -12px rgba(0,0,0,.25)} }
+.opt input:checked{animation:tick .35s var(--ease-spring)}
+@keyframes tick{40%{transform:scale(1.25)}}
+
+/* chips that are links (e.g. plan badge) */
+a.chip{transition:transform .25s var(--ease-out),box-shadow .25s}
+@media (hover:hover){ a.chip:hover{transform:translateY(-1px);box-shadow:0 6px 14px -8px rgba(0,0,0,.4)} }
+
+/* progress bars fill with a softer curve */
+.bar>i{animation-duration:.9s;animation-timing-function:var(--ease-out)}
+
+/* ---------- 5. Landing: hero depth ---------- */
+.landing{position:relative}
+.deco{position:absolute;pointer-events:none;z-index:-1}
+.orb{border-radius:50%;background:radial-gradient(closest-side,var(--orb,rgba(61,220,151,.22)),transparent);
+  transform:translate3d(0,calc(var(--sy,0) * var(--depth,-0.08) * 1px),0)}
+.hero-shell{position:relative}
+.hero-shell .orb.a{width:620px;height:620px;right:-140px;top:-160px;--orb:rgba(61,220,151,.20);--depth:-0.12}
+.hero-shell .orb.b{width:420px;height:420px;left:-180px;top:120px;--orb:rgba(23,89,76,.55);--depth:-0.05}
+.hero-shell .orb.c{width:200px;height:200px;right:38%;top:58%;--orb:rgba(255,122,26,.10);--depth:-0.2}
+/* fine rings, a quiet decorative element */
+.halo{border-radius:50%;border:1px solid rgba(255,255,255,.08);transform:translate3d(0,calc(var(--sy,0) * var(--depth,-0.06) * 1px),0)}
+.hero-shell .halo.r1{width:520px;height:520px;right:-60px;top:-60px;--depth:-0.09}
+.hero-shell .halo.r2{width:340px;height:340px;right:30px;top:30px;border-style:dashed;border-color:rgba(255,255,255,.06);--depth:-0.14}
+
+/* headline: the last word gets a soft green sheen */
+.hl-accent{background:linear-gradient(100deg,#FFFFFF 10%,#9EEBCB 60%,#3DDC97 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* the sample tracker board floats slightly forward, with small floating UI cards */
+.hero-board-wrap{position:relative}
+.hero-board{transition:transform .6s var(--ease-out),box-shadow .6s var(--ease-out)}
+@media (hover:hover){ .hero-board-wrap:hover .hero-board{transform:translateY(-4px) rotate(-.3deg)} }
+.float-ui{position:absolute;z-index:2;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;
+  background:rgba(255,255,255,.96);color:var(--ink);font-size:12.5px;font-weight:650;white-space:nowrap;
+  box-shadow:0 14px 30px -12px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.12);
+  animation:floaty 7s ease-in-out infinite;animation-delay:var(--fd,0s)}
+.float-ui .ic{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;flex:none}
+.float-ui .ic.g{background:var(--teal-l);color:var(--teal-d)}
+.float-ui .ic.o{background:var(--coral-l);color:var(--coral-d)}
+.float-ui .ic.y{background:var(--gold-l);color:var(--gold-d)}
+.float-ui.f1{left:-28px;top:-18px;--fd:-1s}
+.float-ui.f2{right:-30px;top:60%;--fd:-3.5s}
+.float-ui.f3{left:18%;bottom:-20px;--fd:-5s}
+@keyframes floaty{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-6px,0)}}
+@media (max-width:900px){ .float-ui.f2{right:-6px} .float-ui.f1{left:-6px} }
+/* phones: no room around the board, so the floating cards are left out */
+@media (max-width:620px){ .float-ui{display:none} .hero-shell .orb.a{width:380px;height:380px} }
+
+/* ---------- 6. Landing: a curved, slightly lighter band joins the middle sections ---------- */
+.band{position:relative;margin:56px calc(50% - 50vw) 0;padding:34px calc(50vw - 50%) 40px;
+  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.02))}
+.band > svg{position:absolute;left:0;width:100%;height:48px;display:block;pointer-events:none}
+.band > svg.top{top:-47px}
+.band > svg.bot{bottom:-47px;transform:scaleY(-1)}
+.band > svg path{fill:rgba(255,255,255,.035)}
+.band > svg.bot path{fill:rgba(255,255,255,.02)}
+.band .pub-sec:first-of-type{margin-top:0}
+.band .orb.d{width:480px;height:480px;left:-120px;top:10%;--orb:rgba(61,220,151,.10);--depth:-0.04}
+.band .orb.e{width:360px;height:360px;right:-100px;bottom:-10%;--orb:rgba(255,122,26,.06);--depth:-0.07}
+/* small sparkle accents by section titles */
+.sparkle{display:inline-block;width:14px;height:14px;margin-left:8px;vertical-align:middle;color:var(--bright);opacity:.8;animation:twinkle 4.5s ease-in-out infinite}
+.sparkle.o{color:var(--coral);animation-delay:-2s}
+@keyframes twinkle{0%,100%{transform:scale(1) rotate(0);opacity:.8}50%{transform:scale(.7) rotate(45deg);opacity:.45}}
+.plans-shell{position:relative}
+.plans-shell .orb.f{width:640px;height:420px;left:50%;top:40%;margin-left:-320px;--orb:rgba(61,220,151,.10);--depth:-0.03}
+
+/* ---------- 7. Reduce motion: switch it all off ---------- */
+@media (prefers-reduced-motion:reduce){
+  .rv{opacity:1!important;transform:none!important;transition:none!important}
+  .orb,.halo{transform:none!important}
+  .float-ui,.sparkle{animation:none!important}
+  .page-fade{animation:none!important}
+  .grid > .card:hover,.grid > article:hover,.journey .step:hover,.price:hover,.faq details:hover,.btn:hover{transform:none!important}
+  .btn.pri::after{display:none}
+}
