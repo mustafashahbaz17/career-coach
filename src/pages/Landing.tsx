@@ -39,7 +39,7 @@ const FAQ = [
 ]
 
 function readyColour(v: number) {
-  return v >= 70 ? '#0D9488' : v >= 45 ? '#FBBF24' : '#FF6B5B'
+  return v >= 70 ? 'var(--teal)' : v >= 45 ? 'var(--gold)' : 'var(--coral)'
 }
 
 export default function Landing() {
@@ -66,7 +66,7 @@ export default function Landing() {
         <div className="hero-board" aria-label="Sample preview of the application tracker">
           <div className="row between" style={{ marginBottom: 12 }}>
             <b>A student's season</b>
-            <span className="chip" style={{ background: '#1C3D3E', color: '#99F6E4' }}>Sample</span>
+            <span className="chip" style={{ background: 'rgba(255,255,255,.12)', color: 'var(--on-stage)' }}>Sample</span>
           </div>
           <div className="cols">
             {SAMPLE_BOARD.map((col) => (
@@ -88,7 +88,7 @@ export default function Landing() {
               </div>
             ))}
           </div>
-          <div className="small" style={{ color: '#99C9C4', marginTop: 6 }}>Readiness = CV match + practice done + days left</div>
+          <div className="small" style={{ color: 'var(--on-stage-2)', marginTop: 6 }}>Readiness = CV match + practice done + days left</div>
         </div>
       </section>
 

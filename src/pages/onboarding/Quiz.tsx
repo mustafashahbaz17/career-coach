@@ -165,7 +165,7 @@ export default function Quiz({ onBackToDetails, onFinished }: { onBackToDetails:
       <fieldset key={q.id} className="card stack-m view" style={{ border: '1px solid var(--line)' }}>
         <legend style={{ position: 'absolute', left: -9999 }}>{q.prompt}</legend>
         <h2 style={{ fontSize: 'clamp(20px,2.4vw,24px)' }} aria-hidden="true">{q.prompt}</h2>
-        {q.help && <p className="small muted" style={{ marginTop: -6 }}>{q.help}{q.kind === 'multi' && q.max_choices ? <> · <span className="num">{a.keys.length}/{q.max_choices}</span> chosen</> : null}</p>}
+        {q.help && <p className="small muted" style={{ marginTop: 6 }}>{q.help}{q.kind === 'multi' && q.max_choices ? <> · <span className="num">{a.keys.length}/{q.max_choices}</span> chosen</> : null}</p>}
 
         {q.kind === 'text' ? (
           <div className="stack-s">

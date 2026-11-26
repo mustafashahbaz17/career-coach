@@ -8,7 +8,8 @@ Updated whenever a page changes. Read this before the presentation — you'll be
 - **React + TypeScript app, built with Vite.** Each page is one file in `src/pages/`. Shared pieces (top bar, logo, icons) are in `src/components/`.
 - **`src/App.tsx`** is the list of pages: it says which page shows for which web address (e.g. `/pricing` → the Pricing page), and which pages need sign-in.
 - **`src/main.tsx`** starts the app, loads the styles, and wraps everything in the sign-in tracker (`AuthProvider`).
-- **`src/styles/design.css`** is the design system copied exactly from our HTML design file (colours, fonts, buttons, cards). `src/styles/extra.css` holds a few additions.
+- **`src/styles/design.css`** is the design system from our HTML design file (fonts, buttons, cards, layout). `src/styles/extra.css` holds a few additions.
+- **`src/styles/theme.css`** is the current look, loaded last: a **deep green background with white cards in front and a small orange accent** (the logo dot, deadline countdowns, the featured plan, and a dot on the page you're on). It works with colour variables: the green page sets light-on-dark text, and every white surface switches back to dark-on-light. Delete its import in `src/main.tsx` to go back to the old light look.
 - **`vercel.json`** tells Vercel to send every address to the app, so refreshing on `/pricing` doesn't show a 404.
 - **Secrets:** the website only ever uses the Supabase URL, the publishable/anon key and the n8n base URL, set as environment variables in Vercel (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_N8N_BASE_URL`). No other keys are in this code.
 

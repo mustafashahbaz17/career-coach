@@ -1,0 +1,108 @@
+/* ============================================================================
+   THEME: "Deep green stage" — dark green behind, crisp white cards in front,
+   with a small, bright orange accent used sparingly.
+   Loaded last, so it overrides design.css. To go back to the old look, remove
+   the `import './styles/theme.css'` line in src/main.tsx.
+
+   How it works: colours are CSS variables. The page background ("stage") sets
+   light-on-dark values; every white surface (cards, forms, messages) resets them
+   to dark-on-light. So the same text, link and button styles read correctly in both.
+   ============================================================================ */
+
+:root{
+  /* brand greens */
+  --teal:#0F6E5A; --teal-d:#0B5847; --teal-l:#E8F4F0; --mint:#CDEFE3; --mint-d:#0B5847;
+  --bright:#3DDC97;            /* light green for accents on the dark stage */
+  /* the orange accent (used sparingly) */
+  --coral:#FF7A1A; --coral-d:#C2410C; --coral-l:#FFF2E8;
+  /* text on white */
+  --ink:#0D2924; --ink2:#2F4A44;
+  /* stage (page background) */
+  --stage-1:#0A2D27; --stage-2:#0E3D35; --stage-3:#17594C;
+  --on-stage:#EEF7F3; --on-stage-2:#B5D3CA;
+  --sh:0 1px 2px rgba(0,0,0,.08),0 6px 18px rgba(0,0,0,.10);
+  --sh-h:0 10px 30px rgba(0,0,0,.22),0 2px 6px rgba(0,0,0,.10);
+}
+
+/* ---- the stage: light-on-dark defaults ---- */
+body{
+  background:
+    radial-gradient(1100px 560px at 85% -10%, var(--stage-3) 0%, transparent 60%),
+    radial-gradient(900px 600px at -10% 110%, #0C352E 0%, transparent 55%),
+    linear-gradient(180deg, var(--stage-2) 0%, var(--stage-1) 100%) fixed;
+  background-color:var(--stage-1);
+  color:var(--on-stage);
+  --muted:var(--on-stage-2);
+  --link:#9EEBCB;
+  --line:rgba(255,255,255,.12);
+  --chip-line:rgba(255,255,255,.32);
+  --ghost-h:rgba(255,255,255,.10);
+  --pri-bg:#E6F7EF; --pri-fg:#0B3B32; --pri-h:#FFFFFF;
+  --bar-track:rgba(255,255,255,.14); --bar-fill:var(--bright);
+  --spin-track:rgba(255,255,255,.25); --spin-top:var(--bright);
+}
+h1,h2,h3,h4{color:inherit}
+a{color:var(--link)}
+
+/* ---- white surfaces: switch everything back to dark-on-light ---- */
+.card,.journey .step,.faq details,.err,.okbox,.note,.hb-card,.auth-main,.opt,.inp,.kbd,.placeholder.card{
+  color:var(--ink);
+  --muted:#5D6F6A;
+  --link:var(--teal-d);
+  --line:#E5E7E4;
+  --chip-line:#CFD5D2;
+  --ghost-h:var(--teal-l);
+  --pri-bg:var(--teal); --pri-fg:#fff; --pri-h:var(--teal-d);
+  --bar-track:#ECEFED; --bar-fill:var(--teal);
+  --spin-track:#CFE6DF; --spin-top:var(--teal);
+}
+.card{border-color:rgba(255,255,255,.6)}
+.card.flat{border-color:var(--line)}
+
+/* ---- buttons ---- */
+.btn.pri{background:var(--pri-bg);border-color:var(--pri-bg);color:var(--pri-fg)}
+.btn.pri:hover{background:var(--pri-h);border-color:var(--pri-h)}
+.btn.ghost{color:inherit}
+.btn.ghost:hover{background:var(--ghost-h)}
+.btn:hover{border-color:var(--teal)}
+
+/* ---- chips, bars, spinner, steps ---- */
+.chip.line{color:inherit;border-color:var(--chip-line)}
+.bar{background:var(--bar-track)}
+.bar>i{background:var(--bar-fill)}
+.spinner{border-color:var(--spin-track);border-top-color:var(--spin-top)}
+.steps .s.on{color:var(--on-stage)}
+.steps .s.on i{border-color:var(--bright);color:var(--teal-d)}
+.steps .s.done i{background:var(--bright);border-color:var(--bright);color:#0B3B32}
+.steps .sep{background:rgba(255,255,255,.22)}
+:focus-visible{outline-color:rgba(61,220,151,.6)}
+.inp:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(15,110,90,.18)}
+.opt:hover{border-color:#9FD3C2}
+.opt input{accent-color:var(--teal)}
+
+/* ---- top bar: part of the green stage ---- */
+.pubnav{background:rgba(9,40,34,.72);border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.brand{color:var(--on-stage)}
+.pubnav .btn:not(.pri):not(.ghost){background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);color:var(--on-stage)}
+.pubnav .btn:not(.pri):not(.ghost):hover{background:rgba(255,255,255,.14)}
+.pubnav .btn.ghost{color:var(--on-stage-2)}
+.pubnav .btn.ghost:hover{color:var(--on-stage)}
+/* the orange accent: a small dot on the page you're on */
+.pubnav a.btn.active{position:relative}
+.pubnav a.btn.active::after{content:"";position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--coral)}
+
+/* ---- landing ---- */
+.hero .lead{color:var(--on-stage-2)}
+.hero-board{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 60px rgba(0,0,0,.28);backdrop-filter:blur(6px)}
+.hb-col h5{color:var(--on-stage-2)}
+.price.feat{border-color:var(--coral)}
+
+/* ---- sign-in pages ---- */
+.auth-side{background:transparent}
+.auth-main{background:#fff}
+
+/* ---- deadlines use the orange accent ---- */
+.cd.urgent{color:var(--coral-d)}
+
+/* the logo name above the sign-in form (phones) sits on white */
+.auth-main .brand{color:var(--ink)}

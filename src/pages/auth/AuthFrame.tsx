@@ -13,11 +13,11 @@ export default function AuthFrame({ children }: { children: ReactNode }) {
         </Link>
         <div>
           <h2 style={{ fontSize: 'clamp(24px,3vw,34px)' }}>Your recruitment season, handled.</h2>
-          <p style={{ color: '#B9D7D3', maxWidth: '44ch' }}>
+          <p style={{ color: 'var(--on-stage-2)', maxWidth: '44ch' }}>
             Find the programmes you're eligible for, tailor your CV to each, practise the interview, and never miss a deadline.
           </p>
         </div>
-        <div className="small" style={{ color: '#9FC3BF' }}>
+        <div className="small" style={{ color: 'var(--on-stage-2)' }}>
           Your account only ever sees its own data. Nothing is sent to a recruiter without your approval.
         </div>
       </div>

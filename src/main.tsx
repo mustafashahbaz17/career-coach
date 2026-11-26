@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './styles/design.css'
 import './styles/extra.css'
+import './styles/theme.css'
 import App from './App'
 import { AuthProvider } from './auth/AuthProvider'
 
