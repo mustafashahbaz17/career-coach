@@ -169,3 +169,15 @@ a.chip{transition:transform .25s var(--ease-out),box-shadow .25s}
   .grid > .card:hover,.grid > article:hover,.journey .step:hover,.price:hover,.faq details:hover,.btn:hover{transform:none!important}
   .btn.pri::after{display:none}
 }
+
+/* ---------- 8. Phones: sample tracker board ---------- */
+@media (max-width:620px){
+  .hero{padding-top:26px;row-gap:30px}
+  .hero-board{padding:14px}
+  .hero-board .cols{gap:7px}
+  .hb-card{padding:8px;font-size:11.5px}
+  .hb-card b{font-size:12px;line-height:1.25}
+  .hb-card .row{flex-wrap:nowrap;gap:4px}
+  .hb-card .cd{font-size:11.5px;white-space:nowrap}
+  .hb-card .cd.urgent::before{width:6px;height:6px}
+}

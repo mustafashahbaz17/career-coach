@@ -44,17 +44,56 @@ export function useScrollReveal(root: HTMLElement | null, key: string) {
       })
     }
 
+    // Backup check (doesn't rely on IntersectionObserver): reveal anything that is on screen.
+    // Runs after tagging, on scroll/resize, and shortly after new content appears. This guarantees
+    // content can never stay invisible, whatever the browser's timing (e.g. iPhone Safari).
+    const showVisible = () => {
+      root.querySelectorAll<HTMLElement>('.rv:not(.rv-in)').forEach((el) => {
+        const r = el.getBoundingClientRect()
+        if (r.top < window.innerHeight - 8 && r.bottom > 0) {
+          el.classList.add('rv-in')
+          io.unobserve(el)
+        }
+      })
+    }
+    let tick = 0
+    const onScroll = () => { if (!tick) tick = requestAnimationFrame(() => { tick = 0; showVisible() }) }
+    let backup = 0
+    let f1 = 0, f2 = 0
+    const soon = () => {
+      // two frames later (so the fade still plays), then once more after a moment for late layout
+      cancelAnimationFrame(f1); cancelAnimationFrame(f2)
+      f1 = requestAnimationFrame(() => { f2 = requestAnimationFrame(showVisible) })
+      clearTimeout(backup); backup = window.setTimeout(showVisible, 900)
+    }
+
     tag()
+    soon()
     let raf = 0
     const mo = new MutationObserver(() => {
       cancelAnimationFrame(raf)
-      raf = requestAnimationFrame(tag)
+      raf = requestAnimationFrame(() => { tag(); soon() })
     })
     mo.observe(root, { childList: true, subtree: true })
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+
     return () => {
       io.disconnect()
       mo.disconnect()
       cancelAnimationFrame(raf)
+      cancelAnimationFrame(tick)
+      cancelAnimationFrame(f1)
+      cancelAnimationFrame(f2)
+      clearTimeout(backup)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      // When the page changes, this run stops. Un-tag anything it hadn't revealed yet, so the next
+      // run picks it up again (otherwise elements tagged at the moment of navigation could stay hidden).
+      root.querySelectorAll<HTMLElement>('.rv:not(.rv-in)').forEach((el) => {
+        delete el.dataset.rv
+        el.classList.remove('rv')
+      })
     }
   }, [root, key])
 }

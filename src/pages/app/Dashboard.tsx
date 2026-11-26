@@ -100,7 +100,7 @@ export default function Dashboard() {
           <div className="stack-s">
             <span className="label">Your profile</span>
             {summary.length ? (
-              <div className="row" style={{ gap: 8 }}>{summary.map((s) => <span key={s} className="chip">{s}</span>)}</div>
+              <div className="row" style={{ gap: 8 }}>{summary.map((s) => <span key={s} className="chip" style={{ whiteSpace: 'normal', maxWidth: '100%' }}>{s}</span>)}</div>
             ) : (
               <span className="small muted">No details yet.</span>
             )}
