@@ -1,0 +1,443 @@
+{
+  "name": "linkedin-import",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## linkedin-import (TEMPORARY)\nWeek-1 stand-in so the website can wire up the import button: it checks the login, the monthly limit and the link, then always replies `import_failed` (the form then opens). Step 5 replaces **Reply import_failed** with the Apify + AI steps.\n\n**After import:** in **Auth check**, choose `cc-auth-and-limits` from the list.",
+        "height": 260,
+        "width": 560,
+        "color": 4
+      },
+      "id": "6a2dbe71-b4cb-49f5-a7e0-6b9ccf19f1b7",
+      "name": "About",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "linkedin-import",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://careercoach-pk.vercel.app,https://career-coach-pink.vercel.app"
+        }
+      },
+      "id": "a1c4e179-e089-4426-8aee-ed2a79344da2",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        48,
+        368
+      ],
+      "notesInFlow": true,
+      "webhookId": "44050814-b64a-41f9-96d7-40c65d5ecc11",
+      "notes": "Receives POST /webhook/linkedin-import from the website"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "89df8b59-fa70-4d01-b281-f7a9bbfbf05d",
+              "name": "token",
+              "value": "={{ $('Webhook').first().json.headers.authorization || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "c1474944-85e7-4f16-b0ff-ea50cbfb3d12",
+              "name": "feature",
+              "value": "linkedin-import",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7ffebc3d-3ab5-4d42-a86a-6b72d0f7b4b6",
+      "name": "Auth inputs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        368
+      ],
+      "notesInFlow": true,
+      "notes": "Packs the login token and this feature's name for the shared check"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wk8gX9iGBF7gFdoM",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/wk8gX9iGBF7gFdoM",
+          "cachedResultName": "cc-auth-and-limits"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "01f095a8-242c-4e92-813c-1b4e3c9f65db",
+      "name": "Auth check",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        368
+      ],
+      "notesInFlow": true,
+      "onError": "continueErrorOutput",
+      "notes": "Runs cc-auth-and-limits: signed in, and under this month's limit?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "5dcf2d05-e582-419a-aea0-142e892deb31",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9ac444b4-a9de-48a7-bda1-d7afeb72fbd6",
+      "name": "Allowed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        704,
+        368
+      ],
+      "notesInFlow": true,
+      "notes": "Continues only if the shared check said ok"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "fc50e9e6-9b0c-4cb6-a268-a7fb84faee37",
+              "leftValue": "={{ String($('Webhook').first().json.body?.linkedin_url ?? '').trim() }}",
+              "rightValue": "/^https?:\\/\\/([a-z]{2,3}\\.|www\\.)?linkedin\\.com\\/in\\/[^\\/?#\\s]+\\/?(\\?.*)?$/i",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "da7e7ace-810d-43e9-a6f7-83b469df629a",
+      "name": "Valid link?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        928,
+        288
+      ],
+      "notesInFlow": true,
+      "notes": "Checks the link looks like a LinkedIn profile (also pk.linkedin.com and app share links)"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"ok\": false,\n  \"code\": \"import_failed\",\n  \"retryable\": true\n}",
+        "options": {}
+      },
+      "id": "f907d81b-814d-423d-97a3-0cec200746da",
+      "name": "Reply import_failed",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1168,
+        208
+      ],
+      "notesInFlow": true,
+      "notes": "TEMPORARY: always import_failed until Step 5 adds Apify"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"ok\": false,\n  \"code\": \"bad_url\",\n  \"retryable\": false\n}",
+        "options": {}
+      },
+      "id": "2444ca05-1f6e-4550-8bce-35e45b8c07a0",
+      "name": "Reply bad_url",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1168,
+        384
+      ],
+      "notesInFlow": true,
+      "notes": "Tells the website the link isn't a LinkedIn profile"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "639856b4-4449-409b-9c85-1edbdec6371c",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": "not_signed_in",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "81ea4aad-edf6-4557-8f7c-d4747c647ae1",
+      "name": "Not signed in?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        928,
+        592
+      ],
+      "notesInFlow": true,
+      "notes": "Splits the two refusals: not signed in, or limit reached"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"ok\": false,\n  \"code\": \"not_signed_in\"\n}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "048a27bc-7db9-4cac-a85f-9e4bc158bc88",
+      "name": "Reply 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1168,
+        560
+      ],
+      "notesInFlow": true,
+      "notes": "Sends HTTP 401 not_signed_in"
+    },
+    {
+      "parameters": {
+        "tableId": "ai_runs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('Auth check').first().json.user_id }}"
+            },
+            {
+              "fieldId": "workflow",
+              "fieldValue": "linkedin-import"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "limit_reached"
+            },
+            {
+              "fieldId": "error_code",
+              "fieldValue": "limit_reached"
+            }
+          ]
+        }
+      },
+      "id": "26f390f2-f104-4fbc-8b58-ab404053debc",
+      "name": "Log limit",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        768
+      ],
+      "notesInFlow": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "do2E3vphY4yosOMR",
+          "name": "CC Supabase service"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "Records the blocked run in ai_runs for the admin page"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, code: 'limit_reached', retryable: false, used: $('Auth check').first().json.used, limit: $('Auth check').first().json.limit } }}",
+        "options": {}
+      },
+      "id": "ca89c71e-cb8f-4aa3-82db-79bc53fd7520",
+      "name": "Reply limit_reached",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1392,
+        768
+      ],
+      "notesInFlow": true,
+      "notes": "Sends limit_reached with used and limit"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Auth inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth inputs": {
+      "main": [
+        [
+          {
+            "node": "Auth check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth check": {
+      "main": [
+        [
+          {
+            "node": "Allowed?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply import_failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Allowed?": {
+      "main": [
+        [
+          {
+            "node": "Valid link?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Not signed in?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid link?": {
+      "main": [
+        [
+          {
+            "node": "Reply import_failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply bad_url",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Not signed in?": {
+      "main": [
+        [
+          {
+            "node": "Reply 401",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log limit": {
+      "main": [
+        [
+          {
+            "node": "Reply limit_reached",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6c16b35b-2688-4f63-b86e-514a4a7fc401",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e4aa3bade0545e194969135507f0dbc0b52d580549fc735e82a6dbfadbe1ede"
+  },
+  "nodeGroups": [],
+  "id": "STgeBhAQLpYCT72v",
+  "tags": []
+}

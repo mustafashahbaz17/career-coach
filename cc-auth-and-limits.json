@@ -1,0 +1,498 @@
+{
+  "name": "cc-auth-and-limits",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## cc-auth-and-limits\nShared check that every webhook workflow calls first: who is this, and may they run this feature now?\n\n**After import:** open **Check token** and replace `https://YOUR-PROJECT.supabase.co` (keep `/auth/v1/user`) and `PASTE_ANON_KEY_HERE` with the Supabase URL and anon key from the vault.\n\nReturns `{ok, user_id, plan, used, limit}` or `{ok:false, code}`.",
+        "height": 260,
+        "width": 520,
+        "color": 4
+      },
+      "id": "6cc8edfa-6645-4b94-a968-79ba222e4f4b",
+      "name": "About",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        -384
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "9ff09969-45f0-498a-8a91-f9aebd68522a",
+      "name": "When called",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -272,
+        -48
+      ],
+      "notesInFlow": true,
+      "notes": "Starts when another workflow calls it, receiving token and feature"
+    },
+    {
+      "parameters": {
+        "url": "https://hlslkrjuaciplpeplpay.supabase.co/auth/v1/user",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_HeeIrsGe1fsLbySwtP3inw_5gz9BKH6"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $json.token }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "e90f958b-ae28-4a46-9f2d-4fb0f3c216f9",
+      "name": "Check token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -48,
+        -48
+      ],
+      "notesInFlow": true,
+      "onError": "continueErrorOutput",
+      "notes": "Asks Supabase whose login token this is; a bad or expired one goes down the error branch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "04df8f22-cf9f-477e-b103-5a24b3f0fb1b",
+              "name": "ok",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "d07d4e22-d6d3-41e6-b7ab-6dcad8830dc2",
+              "name": "code",
+              "value": "not_signed_in",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "07f753e9-c19c-4ee4-9497-edadd40f882b",
+      "name": "Not signed in",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        176
+      ],
+      "notesInFlow": true,
+      "notes": "Hands not_signed_in back to the caller"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "profiles",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        }
+      },
+      "id": "e91d2ad6-eb21-452f-aebd-7eb7e55b46e2",
+      "name": "Get plan",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        224,
+        -48
+      ],
+      "notesInFlow": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "do2E3vphY4yosOMR",
+          "name": "CC Supabase service"
+        }
+      },
+      "notes": "Reads the student's plan from profiles"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "plan_limits",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "plan",
+              "condition": "eq",
+              "keyValue": "={{ $json.plan || 'free' }}"
+            },
+            {
+              "keyName": "feature",
+              "condition": "eq",
+              "keyValue": "={{ $('When called').first().json.feature }}"
+            }
+          ]
+        }
+      },
+      "id": "3af1c28f-afa5-4e7a-b78b-955f77044471",
+      "name": "Get limit",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -48
+      ],
+      "notesInFlow": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "do2E3vphY4yosOMR",
+          "name": "CC Supabase service"
+        }
+      },
+      "notes": "Reads the monthly limit for this plan and feature (missing counts as 0)"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "monthly_usage",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Check token').first().json.id }}"
+            },
+            {
+              "keyName": "feature",
+              "condition": "eq",
+              "keyValue": "={{ $('When called').first().json.feature }}"
+            }
+          ]
+        }
+      },
+      "id": "0873eb41-948a-40b8-b690-c6a30634c855",
+      "name": "Get usage",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        656,
+        -48
+      ],
+      "notesInFlow": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "do2E3vphY4yosOMR",
+          "name": "CC Supabase service"
+        }
+      },
+      "notes": "Reads this month's successful runs of the feature (none counts as 0)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a0f894b5-974c-4e97-9a59-4d74b223f139",
+              "name": "user_id",
+              "value": "={{ $('Check token').first().json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "822bf3af-4d48-45f4-8e41-f9921bf90b60",
+              "name": "plan",
+              "value": "={{ $('Get plan').first().json.plan || 'free' }}",
+              "type": "string"
+            },
+            {
+              "id": "fecfec82-27ec-44ac-bf23-b82dea94e49e",
+              "name": "used",
+              "value": "={{ Number($('Get usage').first().json.runs ?? 0) }}",
+              "type": "number"
+            },
+            {
+              "id": "5442d8c7-4182-4fb4-83a2-cf0cbb22ee00",
+              "name": "limit",
+              "value": "={{ Number($('Get limit').first().json.monthly_limit ?? 0) }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ef42fc6a-9e3c-41af-aa6f-62ed812ea3cf",
+      "name": "Tally",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        -48
+      ],
+      "notesInFlow": true,
+      "executeOnce": true,
+      "notes": "Puts user, plan, runs used and the limit side by side as numbers"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "fc28d85a-df97-4586-b6e4-d651786c0c30",
+              "leftValue": "={{ $json.used }}",
+              "rightValue": "={{ $json.limit }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "21c1b748-367c-4c3c-9a05-7eb2a40eb145",
+      "name": "Over limit?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        -48
+      ],
+      "notesInFlow": true,
+      "notes": "True when the runs used have reached the limit"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "409bf5ad-6fbc-48fb-a91d-b840c3050e33",
+              "name": "ok",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "944477e9-4c75-4118-801e-3c9095c94b8b",
+              "name": "code",
+              "value": "limit_reached",
+              "type": "string"
+            },
+            {
+              "id": "d425f3b7-954f-47d6-a9a8-48000a4a2cdf",
+              "name": "used",
+              "value": "={{ $json.used }}",
+              "type": "number"
+            },
+            {
+              "id": "e97f9ef0-c5d2-4335-9e38-b8cad7e959da",
+              "name": "limit",
+              "value": "={{ $json.limit }}",
+              "type": "number"
+            },
+            {
+              "id": "04edae74-b88f-4feb-9880-d91895f3bf56",
+              "name": "user_id",
+              "value": "={{ $json.user_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ba3c99ae-e03d-4e56-81ad-0fe3ccb074dc",
+              "name": "plan",
+              "value": "={{ $json.plan }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "37c98d23-3f7f-435b-a839-e578ebd5aa5a",
+      "name": "Limit reached",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1328,
+        -144
+      ],
+      "notesInFlow": true,
+      "notes": "Hands limit_reached back, with used and limit"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d9355b89-f870-44ba-ba12-95fbfdfbccdf",
+              "name": "ok",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "b552f728-14a2-4097-88ba-ff4e47dfd128",
+              "name": "user_id",
+              "value": "={{ $json.user_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a53c0631-f8e3-45e1-8c33-0ffc24e70278",
+              "name": "plan",
+              "value": "={{ $json.plan }}",
+              "type": "string"
+            },
+            {
+              "id": "8a938d48-25f6-4028-af16-237804fb7223",
+              "name": "used",
+              "value": "={{ $json.used }}",
+              "type": "number"
+            },
+            {
+              "id": "f4acddda-2355-42c3-b260-6ad071aa64c8",
+              "name": "limit",
+              "value": "={{ $json.limit }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d24792ec-7bea-4219-bf29-bdeec9c36c8a",
+      "name": "Allowed",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1328,
+        80
+      ],
+      "notesInFlow": true,
+      "notes": "Hands ok back, with user, plan, used and limit"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When called": {
+      "main": [
+        [
+          {
+            "node": "Check token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check token": {
+      "main": [
+        [
+          {
+            "node": "Get plan",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Not signed in",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get plan": {
+      "main": [
+        [
+          {
+            "node": "Get limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get limit": {
+      "main": [
+        [
+          {
+            "node": "Get usage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get usage": {
+      "main": [
+        [
+          {
+            "node": "Tally",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tally": {
+      "main": [
+        [
+          {
+            "node": "Over limit?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Over limit?": {
+      "main": [
+        [
+          {
+            "node": "Limit reached",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Allowed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c5ee284e-fee8-4f0d-a77e-6e340d368f7c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e4aa3bade0545e194969135507f0dbc0b52d580549fc735e82a6dbfadbe1ede"
+  },
+  "nodeGroups": [],
+  "id": "wk8gX9iGBF7gFdoM",
+  "tags": []
+}

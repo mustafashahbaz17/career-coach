@@ -1,28 +1,11 @@
-# Career Coach
+# n8n workflows
 
-A recruitment-season co-pilot for university students in Pakistan. Gen AI course final project.
+Live on the course n8n (https://n8n.devplusops.com). After every change, re-export (⋯ → Download) and replace the file here.
 
-**Live site:** https://careercoach-pk.vercel.app
+| Workflow | Trigger | What it does | Tables it writes |
+|---|---|---|---|
+| `cc-auth-and-limits` | Called by other workflows | Checks the student's login token with Supabase, then their plan's monthly limit for the feature. Returns `ok` with user, plan, used and limit, or `not_signed_in` / `limit_reached`. | None (reads `profiles`, `plan_limits`, `monthly_usage`) |
+| `onboard-tracks` | Webhook `POST /webhook/onboard-tracks` | Reads the saved profile (six allowed fields only) and quiz, asks the course model for 3 career tracks with reasons (one retry if the answer is invalid), then saves and returns them. | `interest_results`, `ai_runs` |
+| `linkedin-import` | Webhook `POST /webhook/linkedin-import` | **Temporary (week 1):** checks login, limit and link, then replies `import_failed` so the website falls back to the form. Step 5 adds the Apify import. | `ai_runs` (only when a limit blocks a run) |
 
-- **Website:** React + TypeScript (Vite), hosted on Vercel. Written by an AI coding tool (Claude); no code written by hand.
-- **Sign-in and database:** Supabase.
-- **AI work:** the course n8n, called through webhooks.
-
-## Folders
-
-```
-/            website code
-/supabase    SQL files, numbered (data lead)
-/n8n         exported workflow JSON (n8n owner)
-/docs        briefs, PAGES.md, proposal, test sets, report drafts
-```
-
-See `docs/PAGES.md` for what every page does.
-
-## Environment variables (set in Vercel, never committed)
-
-| Name | What it is |
-|---|---|
-| `VITE_SUPABASE_URL` | Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | Supabase anon (public) key |
-| `VITE_N8N_BASE_URL` | `https://n8n.devplusops.com/webhook` |
+`cc-test-bench` is a private test harness and is deliberately not in the repo, because it holds a test account's password.
