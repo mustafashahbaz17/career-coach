@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 20 240 230" width="240" height="250"><defs><radialGradient id="oshade" cx=".35" cy=".3" r=".8"><stop offset=".55" stop-color="#FF8A1F" stop-opacity="0"/><stop offset="1" stop-color="#E06A00" stop-opacity=".55"/></radialGradient>
+<radialGradient id="bath" cx=".5" cy=".3" r=".8"><stop offset="0" stop-color="#8FE3C6"/><stop offset="1" stop-color="#3DB58F"/></radialGradient></defs><rect x="18" y="176" width="204" height="62" rx="22" fill="#0B5847"/><g transform="translate(0 32)">
+<!-- tiny ears, set high -->
+<ellipse cx="70" cy="58" rx="9" ry="8" fill="#94623A"/><ellipse cx="170" cy="58" rx="9" ry="8" fill="#94623A"/>
+<ellipse cx="70" cy="59" rx="4" ry="3.4" fill="#6E4527"/><ellipse cx="170" cy="59" rx="4" ry="3.4" fill="#6E4527"/>
+<!-- boxy head with a flat top -->
+<path d="M58 96 q0 -40 34 -40 h56 q34 0 34 40 v26 q0 44 -62 44 q-62 0 -62 -44z" fill="#B57E4B"/>
+<path d="M70 70 q6 -12 24 -12 h52 q18 0 24 12" stroke="#C99560" stroke-width="7" fill="none" stroke-linecap="round" opacity=".55"/>
+<!-- long, blunt muzzle -->
+<path d="M74 112 q0 -18 22 -18 h48 q22 0 22 18 v18 q0 30 -46 30 q-46 0 -46 -30z" fill="#94623A"/>
+<!-- the wide capybara nose -->
+<path d="M100 106 h40 q8 0 6 7 q-4 10 -26 10 q-22 0 -26 -10 q-2 -7 6 -7z" fill="#4A2F1C"/>
+<path d="M106 110 q4 3 8 1 M126 111 q4 2 8 -1" stroke="#1E130B" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+<path d="M120 123 v9 M110 136 q10 7 20 0" stroke="#2E1F14" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+<path d="M81 84 q7 4 14 0 M145 84 q7 4 14 0" stroke="#2E1F14" stroke-width="3" fill="none" stroke-linecap="round"/>
+<ellipse cx="74" cy="104" rx="7" ry="4" fill="#FF9A6B" opacity=".42"/><ellipse cx="166" cy="104" rx="7" ry="4" fill="#FF9A6B" opacity=".42"/></g><g transform="translate(120 72) rotate(-4)">
+  <circle r="15" fill="#FF8A1F"/>
+  <circle r="15" fill="url(#oshade)"/>
+  <ellipse cx="-5.25" cy="-6.0" rx="4.2" ry="2.6999999999999997" fill="#fff" opacity=".55"/>
+  <path d="M0 -15 q1 -5 -1 -8" stroke="#5B3A1A" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <path d="M1 -21 q9 -8 16 -2 q-8 7 -16 2z" fill="#3DDC97"/>
+</g><path d="M24 186 q24 -10 48 0 t48 0 t48 0 t48 0 v40 q0 6 -6 6 h-180 q-6 0 -6 -6z" fill="url(#bath)" opacity=".96"/><path d="M60 196 q10 -5 20 0 M152 200 q10 -5 20 0" stroke="#fff" stroke-width="2.4" fill="none" opacity=".7" stroke-linecap="round"/><path d="M44 70 q-6 -10 0 -20 q6 -10 0 -20" stroke="#BFE9D8" stroke-width="3" fill="none" opacity=".8" stroke-linecap="round"/><path d="M196 70 q-6 -10 0 -20 q6 -10 0 -20" stroke="#BFE9D8" stroke-width="3" fill="none" opacity=".8" stroke-linecap="round"/></svg>

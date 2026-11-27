@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 250" width="240" height="250"><defs><radialGradient id="oshade" cx=".35" cy=".3" r=".8"><stop offset=".55" stop-color="#FF8A1F" stop-opacity="0"/><stop offset="1" stop-color="#E06A00" stop-opacity=".55"/></radialGradient>
+<radialGradient id="bath" cx=".5" cy=".3" r=".8"><stop offset="0" stop-color="#8FE3C6"/><stop offset="1" stop-color="#3DB58F"/></radialGradient></defs><ellipse cx="120" cy="190" rx="74" ry="58" fill="#B57E4B"/>
+<path d="M50 186 q0 -38 40 -46 l30 40 l30 -40 q40 8 40 46 v44 q-70 14 -140 0z" fill="#0F6E5A"/>
+<path d="M90 140 l30 40 l30 -40 q-30 -6 -60 0z" fill="#F4F7F5"/>
+<path d="M90 140 l14 46 l16 -6 z M150 140 l-14 46 l-16 -6 z" fill="#0B5847"/>
+<!-- lanyard + badge -->
+<path d="M106 150 l14 32 l14 -32" stroke="#FF8A1F" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
+<rect x="110" y="180" width="20" height="25" rx="3.5" fill="#fff" stroke="#DCE6E1"/>
+<rect x="114" y="186" width="12" height="3" rx="1.5" fill="#0F6E5A"/><rect x="114" y="192" width="8" height="2.5" rx="1.2" fill="#B9C7C0"/>
+<circle cx="72" cy="208" r="2.6" fill="#0B5847"/><circle cx="168" cy="208" r="2.6" fill="#0B5847"/><path d="M170 172 L186 186" stroke="#0F6E5A" stroke-width="22" stroke-linecap="round"/><path d="M170 172 L186 186" stroke="#0B5847" stroke-width="22" stroke-linecap="round" opacity=".18"/><circle cx="186" cy="186" r="11" fill="#94623A"/><g transform="translate(176 160) rotate(10)"><rect x="-4" y="-26" width="38" height="48" rx="5" fill="#fff" stroke="#DCE6E1"/><rect x="8" y="-30" width="14" height="8" rx="2" fill="#94623A"/>
+<rect x="3" y="-14" width="26" height="3" rx="1.5" fill="#B9C7C0"/><rect x="3" y="-6" width="20" height="3" rx="1.5" fill="#B9C7C0"/><path d="M3 4 l4 4 l8 -9" stroke="#0F6E5A" stroke-width="3" fill="none" stroke-linecap="round"/></g><path d="M68 168 L40 128" stroke="#0F6E5A" stroke-width="22" stroke-linecap="round"/><path d="M68 168 L40 128" stroke="#0B5847" stroke-width="22" stroke-linecap="round" opacity=".18"/><circle cx="40" cy="128" r="11" fill="#94623A"/>
+<!-- tiny ears, set high -->
+<ellipse cx="70" cy="58" rx="9" ry="8" fill="#94623A"/><ellipse cx="170" cy="58" rx="9" ry="8" fill="#94623A"/>
+<ellipse cx="70" cy="59" rx="4" ry="3.4" fill="#6E4527"/><ellipse cx="170" cy="59" rx="4" ry="3.4" fill="#6E4527"/>
+<!-- boxy head with a flat top -->
+<path d="M58 96 q0 -40 34 -40 h56 q34 0 34 40 v26 q0 44 -62 44 q-62 0 -62 -44z" fill="#B57E4B"/>
+<path d="M70 70 q6 -12 24 -12 h52 q18 0 24 12" stroke="#C99560" stroke-width="7" fill="none" stroke-linecap="round" opacity=".55"/>
+<!-- long, blunt muzzle -->
+<path d="M74 112 q0 -18 22 -18 h48 q22 0 22 18 v18 q0 30 -46 30 q-46 0 -46 -30z" fill="#94623A"/>
+<!-- the wide capybara nose -->
+<path d="M100 106 h40 q8 0 6 7 q-4 10 -26 10 q-22 0 -26 -10 q-2 -7 6 -7z" fill="#4A2F1C"/>
+<path d="M106 110 q4 3 8 1 M126 111 q4 2 8 -1" stroke="#1E130B" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+<path d="M120 123 v9 M110 136 q10 7 20 0" stroke="#2E1F14" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+<g fill="#2E1F14"><ellipse cx="88" cy="84" rx="5" ry="5.5"/><ellipse cx="152" cy="84" rx="5" ry="5.5"/></g>
+<g fill="#fff"><circle cx="89.6" cy="82.2" r="1.5"/><circle cx="153.6" cy="82.2" r="1.5"/></g>
+<path d="M80 81 q8 -5 16 0 M144 81 q8 -5 16 0" stroke="#94623A" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+<ellipse cx="74" cy="104" rx="7" ry="4" fill="#FF9A6B" opacity=".42"/><ellipse cx="166" cy="104" rx="7" ry="4" fill="#FF9A6B" opacity=".42"/><g transform="translate(120 40) rotate(0)">
+  <circle r="15" fill="#FF8A1F"/>
+  <circle r="15" fill="url(#oshade)"/>
+  <ellipse cx="-5.25" cy="-6.0" rx="4.2" ry="2.6999999999999997" fill="#fff" opacity=".55"/>
+  <path d="M0 -15 q1 -5 -1 -8" stroke="#5B3A1A" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <path d="M1 -21 q9 -8 16 -2 q-8 7 -16 2z" fill="#3DDC97"/>
+</g><path d="M18 112 q-6 8 0 16 M26 102 q-10 14 0 30" stroke="#FFB266" stroke-width="3" fill="none" stroke-linecap="round" opacity=".85"/></svg>

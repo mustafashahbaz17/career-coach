@@ -1,6 +1,8 @@
 // The list of pages (routes). Each URL path shows one page component.
 // Pages wrapped in <RequireAuth> are private: signed-out visitors are sent to /signin.
-import { Route, Routes } from 'react-router-dom'
+import { useState } from 'react'
+import { Route, Routes, useLocation } from 'react-router-dom'
+import Splash, { shouldShowSplash } from './components/Splash'
 import PublicLayout from './components/PublicLayout'
 import RequireAuth from './auth/RequireAuth'
 import Landing from './pages/Landing'
@@ -17,7 +19,15 @@ import Dashboard from './pages/app/Dashboard'
 import History from './pages/app/History'
 
 export default function App() {
+  // Welcome splash with Bara: decided once, when the site first loads (first visit this browser session).
+  const { pathname } = useLocation()
+  const [splash, setSplash] = useState(() => shouldShowSplash(pathname))
+
   return (
+    <>
+    {splash && <Splash onDone={() => setSplash(false)} />}
+    {/* while the splash is open, the site behind it can't be focused or read out */}
+    <div inert={splash}>
     <Routes>
       {/* Account pages: full-screen two-column design, no top bar */}
       <Route path="/signin" element={<SignIn />} />
@@ -41,5 +51,7 @@ export default function App() {
         <Route path="*" element={<Placeholder title="Page not found" text="We couldn't find that page." />} />
       </Route>
     </Routes>
+    </div>
+    </>
   )
 }

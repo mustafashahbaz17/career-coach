@@ -44,6 +44,18 @@ Updated whenever a page changes. Read this before the presentation — you'll be
 - **`<ErrorNotice>`** shows the message, a **Try again** button when `retryable` is true, a **See plans** button for limits, and a **Sign in** button when signed out.
 - Tested against fake n8n replies for every case in the contract (success, 401, each error code, 404, bad JSON, timeout, network failure, missing base URL): 13/13 pass.
 
+## Welcome splash with Bara (`src/components/Splash.tsx`, `src/components/mascot/`, `src/styles/splash.css`)
+Shown **once per browser session** before the site (first page you open), using `sessionStorage` key `cc-splash-seen`. Not shown on `/signin` or `/reset-password`, because people reach those from email links.
+- **What you see:** Bara the capybara (our mascot) waving, a speech bubble "Hi! Click here to meet your new career coach 🧡" (it types itself out), a glowing orange **Meet your coach** button, and a small **Skip** in the corner. Soft orange and mint circles drift slowly in the background.
+- **Ways in:** the button, the speech bubble, Skip, or the **Escape** key. On click Bara does a happy hop (his eyes switch to happy), an orange wipe grows from what you clicked, and the site fades in underneath (~0.75s). You stay on the page you opened (e.g. `/pricing`).
+- **Bara as SVG layers** (`Bara.tsx` + `baraParts.ts`): body and clipboard arm, the **waving arm** (rotates from the shoulder), the head (calm or happy eyes) and the **orange** (wobbles). The shapes are generated from the same drawing script as the mascot sheet (`docs/mascot/bara_drawing.py`), so they match the art exactly.
+- **Animation:** CSS only, no library: fade-in, Bara rises with a gentle bounce, slow breathing/bobbing, waving, orange wobble, bubble pop + typewriter, button glow, exit wipe. Only transform/opacity/clip-path are animated.
+- **Accessibility:** it's a modal dialog; focus starts on the main button and Tab stays inside it; the site behind is `inert` until you enter; Bara has a full text description; the bubble's button reads its whole sentence. With **reduce motion** on, nothing moves and clicking enters immediately.
+- **Reads / writes / webhooks:** none (only `sessionStorage`).
+- *Tested* (32/32) on desktop and phone: shows on first visit, focus and Tab trap, typewriter, idle animations, Enter → hop + wipe → site, not shown again this session, bubble/Skip/Escape all enter and keep the page, no splash on email-link pages, reduce-motion behaviour.
+
+Mascot art (all five moods as SVGs + the sheet) is in `docs/mascot/`.
+
 ## Public pages (no sign-in needed)
 
 ### `/` — Landing page (`src/pages/Landing.tsx`)
