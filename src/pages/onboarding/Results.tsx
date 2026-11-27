@@ -13,6 +13,7 @@ import { callWorkflow, type WorkflowFailure } from '../../lib/callWorkflow'
 import { useAuth } from '../../auth/AuthProvider'
 import ErrorNotice from '../../components/ErrorNotice'
 import TrackCards, { toShownTrack, type ShownTrack } from '../../components/TrackCards'
+import BaraPose from '../../components/mascot/BaraPose'
 
 type TrackInfo = { key: string; name: string; description: string }
 type Shown = ShownTrack
@@ -100,8 +101,9 @@ export default function Results({ justFinished, onRedoQuiz }: { justFinished: bo
 
   return (
     <div className="stack-m" style={{ maxWidth: 860 }}>
-      <div className="row between">
-        <div>
+      <div className="row between" style={{ flexWrap: 'nowrap', alignItems: 'flex-end' }}>
+        {shown.length > 0 && <BaraPose pose="offer" size={96} motion="pop" />}
+        <div className="grow">
           <h2>Your top career tracks</h2>
           <p className="small muted">From your quiz answers and your details — not from gender, city or background.</p>
         </div>

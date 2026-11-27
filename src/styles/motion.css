@@ -239,3 +239,28 @@ mark.hl{color:inherit;background:linear-gradient(90deg,rgba(255,122,26,.24),rgba
   mark.hl{background-size:100% 42%!important;transition:none}
   .side-menu ol::after,.side-menu a{transition:none}
 }
+
+/* ============================================================================
+   10. Bara around the site (BaraPose)
+   ============================================================================ */
+.bara-pose{display:inline-block;flex:none;line-height:0;vertical-align:middle}
+.bara-pose svg{display:block;width:100%;height:auto;overflow:visible}
+.bara-idle > svg{animation:bara-bob 4.4s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes bara-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px) scale(1.01,1.015)}}
+.bara-pop > svg{animation:bara-pop .8s cubic-bezier(.34,1.56,.64,1) .15s both,bara-bob 4.4s ease-in-out 1s infinite;transform-origin:50% 100%}
+@keyframes bara-pop{from{opacity:0;transform:translateY(18px) scale(.8)}}
+@media (prefers-reduced-motion:reduce){.bara-pose > svg{animation:none!important}}
+
+/* error messages: a small "oops" Bara on the left */
+.err.has-bara{align-items:center}
+.err .bara-pose{margin:-4px 2px -6px -4px}
+@media (max-width:460px){.err.has-bara{flex-wrap:wrap}}
+
+/* page heads with Bara beside the title */
+.page-head .bara-pose{margin-left:auto}
+@media (max-width:620px){.page-head .bara-pose{width:84px!important}}
+/* on card hover Bara does a small hop instead of the icon tilt */
+@media (hover:hover){ .grid > .card:hover .bara-pose svg{transform:translateY(-4px)} }
+.card .bara-pose svg{transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
+/* Bara centred above the text in empty states */
+.bara-pose.center{display:block;margin:0 auto 4px}

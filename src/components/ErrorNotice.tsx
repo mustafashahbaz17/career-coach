@@ -2,6 +2,7 @@
 // Usage: {failure && <ErrorNotice failure={failure} onRetry={run} />}
 import { Link } from 'react-router-dom'
 import type { WorkflowFailure } from '../lib/callWorkflow'
+import BaraPose from './mascot/BaraPose'
 
 type Props = {
   failure: Pick<WorkflowFailure, 'code' | 'message' | 'retryable'>
@@ -17,7 +18,8 @@ export default function ErrorNotice({ failure, onRetry, onDismiss, retrying }: P
     : 'Something went wrong — nothing was lost'
 
   return (
-    <div className="err" role="alert">
+    <div className="err has-bara" role="alert">
+      <BaraPose pose="oops" size={52} motion="none" />
       <div className="grow">
         <b>{title}</b>
         <p style={{ margin: '.2em 0 0' }}>{failure.message}</p>

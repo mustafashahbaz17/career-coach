@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../auth/AuthProvider'
 import ErrorNotice from '../../components/ErrorNotice'
+import BaraPose from '../../components/mascot/BaraPose'
 
 type TrackRow = { track_key: string; score?: number; reason?: string }
 type Item =
@@ -74,7 +75,8 @@ export default function History() {
       ) : failed ? (
         <ErrorNotice failure={LOAD_FAILED} onRetry={load} />
       ) : items.length === 0 ? (
-        <div className="card stack-s" style={{ textAlign: 'center', padding: '36px 18px' }}>
+        <div className="card stack-s" style={{ textAlign: 'center', padding: '28px 18px', alignItems: 'center' }}>
+          <BaraPose pose="hello" size={120} className="center" />
           <b>Nothing here yet</b>
           <p className="small muted">When you get your career tracks or import your LinkedIn profile, it’ll be saved here.</p>
           <div><Link className="btn pri sm" to="/onboarding">Get your career tracks</Link></div>

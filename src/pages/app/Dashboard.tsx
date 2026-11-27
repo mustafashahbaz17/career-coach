@@ -12,17 +12,19 @@ import { useAuth } from '../../auth/AuthProvider'
 import ErrorNotice from '../../components/ErrorNotice'
 import Icon, { type IconName } from '../../components/Icon'
 import TrackCards, { toShownTrack, type ShownTrack } from '../../components/TrackCards'
+import BaraPose from '../../components/mascot/BaraPose'
+import type { BaraPoseName } from '../../components/mascot/baraPoses'
 
 const LOAD_FAILED = { code: 'load_failed', message: 'We couldn’t load your tracks. Please try again.', retryable: true }
 const PLAN_LABEL: Record<string, string> = { free: 'Free plan', pro: 'Pro plan', premium: 'Premium plan' }
 const YEAR_LABEL: Record<string, string> = { '1st': '1st year', '2nd': '2nd year', '3rd': '3rd year', '4th': '4th year', '5th': '5th year', graduated: 'Graduated' }
 
-const COMING: { title: string; text: string; icon: IconName; premium?: boolean }[] = [
+const COMING: { title: string; text: string; icon: IconName; premium?: boolean; bara?: BaraPoseName }[] = [
   { title: 'Opportunity matches', text: 'Programmes you’re eligible for, with why you qualify and what you’re missing.', icon: 'search' },
-  { title: 'Tracker', text: 'Every application on one board, with deadline reminders.', icon: 'board' },
+  { title: 'Tracker', text: 'Every application on one board, with deadline reminders.', icon: 'board', bara: 'deadline' },
   { title: 'CV studio', text: 'Tailor your CV to each role — you accept or reject every change.', icon: 'cv' },
   { title: 'Interview practice', text: 'Timed mock interviews with scored feedback.', icon: 'mic', premium: true },
-  { title: 'Vent space', text: 'A calm, private place to talk through recruitment stress.', icon: 'shield' },
+  { title: 'Vent space', text: 'A calm, private place to talk through recruitment stress.', icon: 'shield', bara: 'vent' },
 ]
 
 export default function Dashboard() {
@@ -125,7 +127,8 @@ export default function Dashboard() {
           ) : tracks.length ? (
             <TrackCards tracks={tracks} />
           ) : (
-            <div className="card stack-s" style={{ textAlign: 'center', padding: '28px 18px' }}>
+            <div className="card stack-s" style={{ textAlign: 'center', padding: '24px 18px', alignItems: 'center' }}>
+              <BaraPose pose="hello" size={110} className="center" />
               <b>No career tracks yet</b>
               <p className="small muted">Take the 3-minute interest quiz and your top 3 tracks will show up here.</p>
               <div><Link className="btn pri sm" to="/onboarding">Take the quiz</Link></div>
@@ -143,7 +146,10 @@ export default function Dashboard() {
                   <span className="row" style={{ gap: 8, color: 'var(--teal-d)' }}><Icon name={c.icon} /><b style={{ color: 'var(--ink)' }}>{c.title}</b></span>
                   <span className="chip line" style={{ fontSize: 11 }}>Coming soon</span>
                 </div>
-                <p className="small muted">{c.text}</p>
+                <div className="row" style={{ flexWrap: 'nowrap', alignItems: 'flex-end', gap: 8 }}>
+                  <p className="small muted grow" style={{ margin: 0 }}>{c.text}</p>
+                  {c.bara && <BaraPose pose={c.bara} size={74} motion="none" />}
+                </div>
                 {c.premium && <span className="chip gold" style={{ alignSelf: 'flex-start', fontSize: 11 }}>Premium</span>}
               </div>
             ))}

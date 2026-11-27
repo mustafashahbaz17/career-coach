@@ -9,6 +9,7 @@ import ErrorNotice from '../../components/ErrorNotice'
 import AboutYou from './AboutYou'
 import Quiz from './Quiz'
 import Results from './Results'
+import BaraPose from '../../components/mascot/BaraPose'
 
 export default function Onboarding() {
   const { profile, profileError, refreshProfile } = useAuth()
@@ -50,6 +51,7 @@ export default function Onboarding() {
           <h1 style={{ fontSize: 'clamp(26px,3.4vw,36px)' }}>{heading}</h1>
           <p className="muted">{sub}</p>
         </div>
+        {view === 'about' && !editing && <BaraPose pose="hello" size={124} motion="pop" />}
       </div>
 
       {!editing && (

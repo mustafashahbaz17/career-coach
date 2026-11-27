@@ -48,7 +48,7 @@ export default function App() {
         <Route path="/pricing/upgrade" element={<RequireAuth><ComingNext title="Upgrade" text="Upgrading is coming soon." /></RequireAuth>} />
         <Route path="/system-check" element={<RequireAuth><SystemCheck /></RequireAuth>} />
 
-        <Route path="*" element={<Placeholder title="Page not found" text="We couldn't find that page." />} />
+        <Route path="*" element={<Placeholder title="Page not found" text="We couldn't find that page." bara="oops" />} />
       </Route>
     </Routes>
     </div>

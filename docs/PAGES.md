@@ -56,6 +56,15 @@ Shown **once per browser session** before the site (first page you open), using 
 
 Mascot art (all five moods as SVGs + the sheet) is in `docs/mascot/`.
 
+### Bara around the site (`src/components/mascot/BaraPose.tsx`, poses in `baraPoses.ts`)
+One component shows Bara in any of his five moods (generated from the same drawing script, so they match the mascot sheet). He's decorative (hidden from screen readers) because the text beside him already says what's happening; he bobs gently or pops in once, and is still with reduce-motion.
+- **hello** — onboarding welcome (About-you step), empty History, dashboard with no tracks yet.
+- **offer** — the results screen when your career tracks appear.
+- **oops** — every error message (`ErrorNotice`: "Our AI is having a moment…", saving failed, etc.) and the Page-not-found page.
+- **deadline** — the dashboard's Tracker card (deadlines).
+- **vent** — the dashboard's Vent space card.
+The Tracker and Vent space cards are still "Coming soon"; Bara moves into those pages when they're built.
+
 ## Public pages (no sign-in needed)
 
 ### `/` — Landing page (`src/pages/Landing.tsx`)
