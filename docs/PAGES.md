@@ -17,6 +17,13 @@ Updated whenever a page changes. Read this before the presentation — you'll be
   - *Hero:* the last word of the headline has a soft green sheen, and three small floating cards ("Reminder set", "CV bullet approved", "Practice answer scored") sit around the Sample tracker board on desktop (hidden on phones; marked `aria-hidden` because they're decoration).
   - *Interactions:* cards lift with a deeper shadow and a soft cursor spotlight, icons nudge, buttons lift and press, primary buttons get a light sheen, quiz ticks pop, and the orange "you are here" dot pops in on the nav.
   - *Accessibility & performance:* only `opacity` and `transform` are animated (no layout shift); everything is off when the visitor has "reduce motion" turned on; decorations never cause sideways scrolling.
+- **Scroll experience** (landing page, plus the progress line on every page). Content is unchanged; these only change how it scrolls:
+  - *Progress line:* a thin orange line under the top bar fills as you scroll (`useScrollProgress` → `--scroll-p`).
+  - *Numbered side menu* (wide screens only): 01 Who it's for · 02 How it works · 03 Plans · 04 Questions, taken from the page's own headings. It stays beside you, an orange marker slides to the section you're in (`useActiveSection`), and clicking scrolls there smoothly.
+  - *Big orange section numbers* (01–04, in the Gambetta serif font) beside those headings.
+  - *Word-by-word brightening:* the "Who it's for" sentence goes from dim to bright as you scroll through it (`useWordScrub`).
+  - *Highlight sweep:* three phrases already in the promise cards get an orange marker that sweeps in when the card appears.
+  - All of it is off (or fully shown) with "reduce motion". *Tested:* the landing text is word-for-word identical to before (checked automatically).
 - **`vercel.json`** tells Vercel to send every address to the app, so refreshing on `/pricing` doesn't show a 404.
 - **Secrets:** the website only ever uses the Supabase URL, the publishable/anon key and the n8n base URL, set as environment variables in Vercel (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_N8N_BASE_URL`). No other keys are in this code.
 
@@ -40,7 +47,7 @@ Updated whenever a page changes. Read this before the presentation — you'll be
 ## Public pages (no sign-in needed)
 
 ### `/` — Landing page (`src/pages/Landing.tsx`)
-Tells a stranger who Career Coach is for, what it does and what it costs. Sections: hero with a **Sample**-labelled tracker preview, who it's for, how it works in 4 steps, three honesty promises, plans summary (Free PKR 0, Pro PKR 499 est., Premium PKR 999 est.), and an FAQ.
+Tells a stranger who Career Coach is for, what it does and what it costs. Sections: hero with a **Sample**-labelled tracker preview, 01 who it's for, 02 how it works in 4 steps, three honesty promises, 03 plans summary (Free PKR 0, Pro PKR 499 est., Premium PKR 999 est.), and 04 an FAQ — with a numbered side menu on wide screens.
 - **Reads / writes / webhooks:** none. No testimonials, user counts or partner logos (course rule).
 
 ### `/pricing` — Plans (`src/pages/Pricing.tsx`)

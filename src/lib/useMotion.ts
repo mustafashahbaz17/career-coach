@@ -6,7 +6,7 @@
 //    are picked up too. Each element animates once.
 // 2. Card spotlight: on devices with a mouse, cards get a soft glow that follows the cursor.
 // Both switch off completely when the visitor has "reduce motion" turned on.
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 const REVEAL = [
   '.page-head', '.sec-title', '.pub-sec > h2', '.pub-sec > div > h2', '.pub-sec > div > p', '.pub-sec > p',
@@ -128,6 +128,93 @@ export function useParallax(el: HTMLElement | null) {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => {
       window.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(raf)
+    }
+  }, [el])
+}
+
+// Scroll progress: writes how far down the page you are (0–1) into --scroll-p on <html>.
+// The thin orange line under the top bar uses it. Cheap: one rAF per scroll frame.
+export function useScrollProgress() {
+  useEffect(() => {
+    const root = document.documentElement
+    let raf = 0
+    const update = () => {
+      raf = 0
+      const max = root.scrollHeight - window.innerHeight
+      root.style.setProperty('--scroll-p', String(max > 0 ? Math.min(1, window.scrollY / max) : 0))
+    }
+    const on = () => { if (!raf) raf = requestAnimationFrame(update) }
+    update()
+    window.addEventListener('scroll', on, { passive: true })
+    window.addEventListener('resize', on)
+    const ro = new ResizeObserver(on)
+    ro.observe(document.body)
+    return () => {
+      window.removeEventListener('scroll', on)
+      window.removeEventListener('resize', on)
+      ro.disconnect()
+      cancelAnimationFrame(raf)
+    }
+  }, [])
+}
+
+// Which section is on screen: returns the id of the last section whose top has passed 40% of the screen.
+// Used by the landing page's numbered side menu.
+export function useActiveSection(ids: string[]) {
+  const [active, setActive] = useState(ids[0])
+  useEffect(() => {
+    let raf = 0
+    const update = () => {
+      raf = 0
+      let cur = ids[0]
+      for (const id of ids) {
+        const el = document.getElementById(id)
+        if (el && el.getBoundingClientRect().top < window.innerHeight * 0.4) cur = id
+      }
+      // at the very bottom the last section can't reach the top, so light it up anyway
+      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4
+      const last = document.getElementById(ids[ids.length - 1])
+      if (atBottom && last && last.getBoundingClientRect().top < window.innerHeight) cur = ids[ids.length - 1]
+      setActive(cur)
+    }
+    const on = () => { if (!raf) raf = requestAnimationFrame(update) }
+    update()
+    window.addEventListener('scroll', on, { passive: true })
+    window.addEventListener('resize', on)
+    return () => {
+      window.removeEventListener('scroll', on)
+      window.removeEventListener('resize', on)
+      cancelAnimationFrame(raf)
+    }
+  }, [ids.join('|')]) // eslint-disable-line react-hooks/exhaustive-deps
+  return active
+}
+
+// Word-by-word brightening: as the element scrolls up through the screen, its words go from dim to bright.
+// Sets --lit (0–1) on each word span. With reduce-motion, all words stay fully bright.
+export function useWordScrub(el: HTMLElement | null) {
+  useEffect(() => {
+    if (!el) return
+    const words = Array.from(el.querySelectorAll<HTMLElement>('.w'))
+    if (reduced()) { words.forEach((w) => w.style.setProperty('--lit', '1')); return }
+    let raf = 0
+    const update = () => {
+      raf = 0
+      const r = el.getBoundingClientRect()
+      const vh = window.innerHeight
+      // 0 when the text's top is at 90% of the screen, 1 when it reaches 45%
+      const p = Math.max(0, Math.min(1, (vh * 0.9 - r.top) / (vh * 0.45)))
+      const lit = p * words.length
+      words.forEach((w, i) => w.style.setProperty('--lit', String(Math.max(0, Math.min(1, lit - i)))))
+    }
+    const on = () => { if (!raf) raf = requestAnimationFrame(update) }
+    update()
+    window.addEventListener('scroll', on, { passive: true })
+    window.addEventListener('resize', on)
+    return () => {
+      window.removeEventListener('scroll', on)
+      window.removeEventListener('resize', on)
       cancelAnimationFrame(raf)
     }
   }, [el])

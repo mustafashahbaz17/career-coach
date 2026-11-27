@@ -1,8 +1,8 @@
 // The public home page at "/". Says who Career Coach is for, what it does and what it costs.
 // It reads nothing from the database and calls no n8n webhooks.
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
-import { useParallax } from '../lib/useMotion'
+import { useActiveSection, useParallax, useWordScrub } from '../lib/useMotion'
 import Icon from '../components/Icon'
 
 // Sample cards for the dark "tracker preview" in the hero. Clearly labelled Sample on screen.
@@ -49,6 +49,52 @@ function Sparkle({ orange }: { orange?: boolean }) {
   )
 }
 
+// The numbered sections, taken from the page's own headings. Used by the side menu and the big numbers.
+const SECTIONS = [
+  { id: 'who', num: '01', label: "Who it's for" },
+  { id: 'how', num: '02', label: 'How it works' },
+  { id: 'plans', num: '03', label: 'Plans' },
+  { id: 'faq', num: '04', label: 'Questions' },
+]
+const SECTION_IDS = SECTIONS.map((x) => x.id)
+
+// Big orange section number shown beside a heading (decorative; screen readers skip it).
+function SecNum({ n }: { n: string }) {
+  return <span className="sec-num" aria-hidden="true">{n}</span>
+}
+
+// Numbered side menu (wide screens). Lights up the section you're in; clicking scrolls there smoothly.
+function SideMenu() {
+  const active = useActiveSection(SECTION_IDS)
+  const idx = SECTIONS.findIndex((x) => x.id === active)
+  return (
+    <aside className="side-menu" aria-label="On this page">
+      <nav>
+        <ol style={{ ['--rail-i' as string]: String(Math.max(idx, 0)) } as CSSProperties}>
+          {SECTIONS.map((x) => (
+            <li key={x.id} className={x.id === active ? 'on' : ''}>
+              <a href={`#${x.id}`} aria-current={x.id === active ? 'true' : undefined}>
+                <span className="n">{x.num}</span>{x.label}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+    </aside>
+  )
+}
+
+// Splits a sentence into word spans for the word-by-word brightening. The text itself is unchanged.
+function ScrubText({ text, className }: { text: string; className?: string }) {
+  const [el, setEl] = useState<HTMLParagraphElement | null>(null)
+  useWordScrub(el)
+  return (
+    <p ref={setEl} className={`scrub ${className || ''}`}>
+      {text.split(' ').map((w, i, all) => <span key={i} className="w">{w}{i < all.length - 1 ? ' ' : ''}</span>)}
+    </p>
+  )
+}
+
 // Soft curved edge for the lighter band in the middle of the page.
 function Wave({ className }: { className: string }) {
   return (
@@ -67,7 +113,9 @@ export default function Landing() {
   useParallax(root) // background glows drift slightly slower than the page as you scroll
 
   return (
-    <div className="wrap landing" ref={setRoot}>
+    <div className="wrap landing landing-layout" ref={setRoot}>
+      <SideMenu />
+      <div className="landing-main">
       {/* 1. Hero (decorations behind it: soft glows and fine rings) */}
       <div className="hero-shell">
       <div className="deco orb a" aria-hidden="true" />
@@ -135,12 +183,10 @@ export default function Landing() {
       <div className="deco orb e" aria-hidden="true" />
 
       {/* 2. Who it's for */}
-      <section className="pub-sec grid g2" style={{ alignItems: 'start' }}>
+      <section id="who" className="pub-sec grid g2" style={{ alignItems: 'start' }}>
         <div>
-          <h2>Who it's for</h2>
-          <p className="muted" style={{ maxWidth: '52ch' }}>
-            Final-year and penultimate-year university students in Pakistan going through recruitment season.
-          </p>
+          <h2 className="numbered"><SecNum n="01" />Who it's for</h2>
+          <ScrubText className="statement" text="Final-year and penultimate-year university students in Pakistan going through recruitment season." />
         </div>
         <div className="card">
           <ul className="who-list">
@@ -152,8 +198,8 @@ export default function Landing() {
       </section>
 
       {/* 3. How it works */}
-      <section className="pub-sec stack-m">
-        <h2>How it works<Sparkle /></h2>
+      <section id="how" className="pub-sec stack-m">
+        <h2 className="numbered"><SecNum n="02" />How it works<Sparkle /></h2>
         <div className="journey four">
           {STEPS.map((s, i) => (
             <div className="step" key={s.title}>
@@ -171,15 +217,15 @@ export default function Landing() {
       <section className="pub-sec grid g3">
         <div className="card">
           <h3>Eligibility first</h3>
-          <p className="muted small">Hard rules like CGPA, degree and graduation year are checked before anything is ranked. Optional demographics are used only for rules like women-only scholarships — never to steer your career.</p>
+          <p className="muted small">Hard rules like CGPA, degree and graduation year are checked before anything is ranked. Optional demographics are used only for rules like women-only scholarships — <mark className="hl">never to steer your career</mark>.</p>
         </div>
         <div className="card">
           <h3>You approve every change</h3>
-          <p className="muted small">CV suggestions wait for you to accept, edit or reject them. We never invent experience, never auto-apply and never email a recruiter.</p>
+          <p className="muted small">CV suggestions wait for you to accept, edit or reject them. We <mark className="hl">never invent experience</mark>, never auto-apply and never email a recruiter.</p>
         </div>
         <div className="card">
           <h3>Honest by design</h3>
-          <p className="muted small">Anything we haven't checked by hand is labelled Sample, and every estimate says it's an estimate.</p>
+          <p className="muted small">Anything we haven't checked by hand is labelled Sample, and <mark className="hl">every estimate says it's an estimate</mark>.</p>
         </div>
       </section>
       <Wave className="bot" />
@@ -190,7 +236,7 @@ export default function Landing() {
         <div className="deco orb f" aria-hidden="true" />
         <div className="sec-title">
           <div>
-            <h2>Plans<Sparkle orange /></h2>
+            <h2 className="numbered"><SecNum n="03" />Plans<Sparkle orange /></h2>
             <p className="muted">Prices are early estimates we're testing with students.</p>
           </div>
           <Link className="btn sm" to="/pricing">Compare plans</Link>
@@ -218,8 +264,8 @@ export default function Landing() {
       </section>
 
       {/* 5. FAQ */}
-      <section className="pub-sec faq" style={{ maxWidth: 780 }}>
-        <h2 style={{ marginBottom: 14 }}>Questions</h2>
+      <section id="faq" className="pub-sec faq" style={{ maxWidth: 780 }}>
+        <h2 className="numbered" style={{ marginBottom: 14 }}><SecNum n="04" />Questions</h2>
         {FAQ.map((f) => (
           <details key={f.q}>
             <summary>{f.q}</summary>
@@ -227,6 +273,7 @@ export default function Landing() {
           </details>
         ))}
       </section>
+      </div>
     </div>
   )
 }

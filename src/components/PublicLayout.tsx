@@ -3,7 +3,7 @@
 // Signed in: Dashboard, History, Pricing links, the student's email and a Sign out button.
 import { useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { useCardSpotlight, useScrollReveal } from '../lib/useMotion'
+import { useCardSpotlight, useScrollProgress, useScrollReveal } from '../lib/useMotion'
 import Logo from './Logo'
 import { homeFor, useAuth } from '../auth/AuthProvider'
 
@@ -26,6 +26,7 @@ export default function PublicLayout() {
   const [main, setMain] = useState<HTMLElement | null>(null)
   useScrollReveal(main, pathname) // fade/slide headings and cards in as they scroll into view
   useCardSpotlight() // soft glow that follows the mouse on cards
+  useScrollProgress() // fills the thin orange line under the top bar as you scroll
 
   async function onSignOut() {
     await signOut()
@@ -35,6 +36,7 @@ export default function PublicLayout() {
   return (
     <>
       <header className="pubnav">
+        <span className="scroll-line" aria-hidden="true" />
         <Link className="brand" to={session ? homeFor(profile) : '/'} style={{ padding: 0 }}>
           <Logo />
           <span className={session ? 'desk-only' : ''}>Career Coach</span>

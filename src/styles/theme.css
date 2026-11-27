@@ -81,7 +81,7 @@ a{color:var(--link)}
 .opt input{accent-color:var(--teal)}
 
 /* ---- top bar: part of the green stage ---- */
-.pubnav{background:rgba(9,40,34,.72);border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.pubnav{background:rgba(9,40,34,.92);border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .brand{color:var(--on-stage)}
 .pubnav .btn:not(.pri):not(.ghost){background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);color:var(--on-stage)}
 .pubnav .btn:not(.pri):not(.ghost):hover{background:rgba(255,255,255,.14)}
