@@ -1,0 +1,4 @@
+id,kind,answers_json,expected_track,expected_code,notes
+EX1,clear,"{""q1"":[""d"",""b""],""q2"":""b"",""q3"":[""a"",""d""],""q4"":""c"",""q5"":[""a"",""c""],""q6"":""a"",""q7"":""a"",""q8"":""c"",""q9"":""I built a dashboard in Excel for our society's fundraiser that showed which events made the most money."",""q10"":""Data analyst roles at Unilever or Jazz""}",data,,Example only: replace with the Content team's A10 set
+EX2,mixed,"{""q1"":[""e"",""f"",""h""],""q2"":""e"",""q3"":[""b"",""e""],""q4"":""d"",""q5"":[""e"",""f""],""q6"":""c"",""q7"":""c"",""q8"":""f"",""q9"":""I organised a clothes drive and made short videos to promote it."",""q10"":""""}",,,Example only: deliberately mixed
+EX3,error,{},,bad_input,Example only: no quiz answers saved should give bad_input
