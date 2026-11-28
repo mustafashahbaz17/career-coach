@@ -150,7 +150,7 @@ export default function Matches() {
         <div className="card stack-m" style={{ alignItems: 'center', textAlign: 'center', padding: 'clamp(24px,4vw,40px)' }}>
           <BaraPose pose="offer" size={130} label="Bara holding an offer letter" />
           <h3>Let’s find what you qualify for</h3>
-          <p className="muted" style={{ maxWidth: 520, margin: 0 }}>We check your degree, CGPA, graduation year and career tracks against every open opportunity, then rank the ones that fit and tell you why.</p>
+          <p className="muted" style={{ maxWidth: 520, margin: '0 auto' }}>We check your degree, CGPA, graduation year and career tracks against every open opportunity, then rank the ones that fit and tell you why.</p>
           <button type="button" className="btn pri" onClick={refresh} disabled={refreshing}>
             {refreshing ? <><span className="spinner" /> Finding matches…</> : 'Find my matches'}
           </button>
