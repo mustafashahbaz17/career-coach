@@ -23,6 +23,7 @@ const PLANS: { key: PlanKey; name: string; price: number; tag?: string; line: st
 const LABELS: [string, string][] = [
   ['onboard-tracks', 'Career track reports'],
   ['linkedin-import', 'LinkedIn imports'],
+  ['cv-import', 'CV imports'],
   ['cv-review', 'CV reviews'],
   ['coach-message', 'Coach messages'],
   ['interview-session', 'Interview practice sessions'],

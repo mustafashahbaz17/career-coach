@@ -1,19 +1,35 @@
 // Onboarding step 1: "About you".
-//  - Optional LinkedIn import at the top → calls the n8n webhook `linkedin-import` (90 s timeout) and pre-fills
-//    ONLY empty fields, tagging them "from LinkedIn". The form always works without it.
+//  - Two optional imports at the top, side by side. Both pre-fill ONLY empty fields and tag them with where they
+//    came from ("from LinkedIn" / "from your CV"). The form always works without them.
+//      · LinkedIn: calls the n8n webhook `linkedin-import` (90 s timeout) with the profile link.
+//      · CV (PDF): reads the text in the browser (src/lib/pdfText.ts, the file is never uploaded), saves it as the
+//        student's "Base CV" in `cv_versions`, then calls the n8n webhook `cv-import` with { cv_text }.
+//        The reply has the same `mapped` shape as `linkedin-import`.
 //  - The form saves to the student's own `profiles` row on Continue, and moves them on to the quiz
 //    (`onboarding_step = 'quiz'`). A refresh keeps everything because the form is filled from `profiles`.
-// Reads: profiles (own row). Writes: profiles (own row). Webhooks: linkedin-import.
+// Reads: profiles (own row), cv_versions (own). Writes: profiles (own row), cv_versions (own). Webhooks: linkedin-import, cv-import.
 import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { supabase } from '../../lib/supabase'
 import { callWorkflow, messageFor, type WorkflowFailure } from '../../lib/callWorkflow'
 import { useAuth } from '../../auth/AuthProvider'
+import { pdfToText, MAX_BYTES } from '../../lib/pdfText'
 import ErrorNotice from '../../components/ErrorNotice'
 import {
   CITIES, DEGREES, GENDERS, LANGUAGES, LINKEDIN_RE, MAX_SKILLS, NATIONALITIES, STUDY_YEARS, UNIVERSITIES,
   applyImport, formFromProfile, profileUpdate, validate,
   type AboutForm, type Errors, type ExperienceRow, type FieldKey, type Mapped,
 } from './aboutYouData'
+
+type Source = 'LinkedIn' | 'your CV'
+
+// CV import messages (the contract's import_failed wording is about LinkedIn, so the CV option has its own)
+const PDF_PROBLEM = {
+  not_pdf: 'Please choose a PDF file.',
+  too_big: `That file is over ${MAX_BYTES / 1024 / 1024} MB. Please choose a smaller PDF.`,
+  no_text: "We couldn't read any text from that PDF (it may be a scanned image). Please fill in the form below.",
+} as const
+const CV_UNREADABLE = "We couldn't find your details in that CV. Please fill in the form below."
+const CV_IMPORT_FAILED = "CV import isn't working right now. You can try again or fill in the form below."
 
 const SAVE_FAILED = { code: 'save_failed', message: 'Something went wrong saving that. Please try again.', retryable: true }
 
@@ -25,7 +41,8 @@ export default function AboutYou({ editing, onSaved }: { editing: boolean; onSav
     return f
   })
   const [errors, setErrors] = useState<Errors>({})
-  const [fromLinkedIn, setFromLinkedIn] = useState<Set<FieldKey>>(new Set())
+  // Which fields an import filled in, and from where (shown as a small tag until the student edits the field)
+  const [filledFrom, setFilledFrom] = useState<Map<FieldKey, Source>>(new Map())
   const [saving, setSaving] = useState(false)
   const [saveFailed, setSaveFailed] = useState(false)
   const topRef = useRef<HTMLDivElement>(null)
@@ -36,10 +53,24 @@ export default function AboutYou({ editing, onSaved }: { editing: boolean; onSav
   const [importFailure, setImportFailure] = useState<WorkflowFailure | null>(null)
   const [importDone, setImportDone] = useState('')
 
+  // CV import state
+  const [cvText, setCvText] = useState('') // kept so "Try again" doesn't need the file again
+  const [cvName, setCvName] = useState('')
+  const [cvBusy, setCvBusy] = useState<'' | 'reading' | 'importing'>('')
+  const [cvError, setCvError] = useState('')
+  const [cvFailure, setCvFailure] = useState<WorkflowFailure | null>(null)
+  const [cvDone, setCvDone] = useState('')
+  const [dragging, setDragging] = useState(false)
+  const busy = importing || cvBusy !== ''
+
+  function markFilled(keys: FieldKey[], from: Source) {
+    setFilledFrom((m) => { const n = new Map(m); keys.forEach((k) => n.set(k, from)); return n })
+  }
+
   function set<K extends FieldKey>(key: K, value: AboutForm[K]) {
     setForm((f) => ({ ...f, [key]: value }))
     setErrors((e) => ({ ...e, [key]: undefined }))
-    if (fromLinkedIn.has(key)) setFromLinkedIn((s) => { const n = new Set(s); n.delete(key); return n })
+    if (filledFrom.has(key)) setFilledFrom((m) => { const n = new Map(m); n.delete(key); return n })
   }
 
   async function runImport() {
@@ -60,13 +91,64 @@ export default function AboutYou({ editing, onSaved }: { editing: boolean; onSav
     if (r.ok) {
       const { form: next, filled } = applyImport(form, r.data.mapped || {})
       setForm(next)
-      setFromLinkedIn((s) => new Set([...s, ...filled]))
+      markFilled(filled, 'LinkedIn')
       setImportDone(filled.length ? `We filled in ${filled.length} field${filled.length === 1 ? '' : 's'} from LinkedIn. Check them below.` : 'We read your profile, but your form already had those details, so nothing was changed.')
       return
     }
     // The import prompt's rules: bad_url / profile_empty / limit messages as-is, anything else = "isn't working right now".
     if (['bad_url', 'profile_empty', 'limit_reached', 'not_signed_in'].includes(r.code)) setImportFailure(r)
     else setImportFailure({ ...r, code: 'import_failed', message: messageFor('import_failed'), retryable: true })
+  }
+
+  async function onCvFile(file: File | undefined) {
+    if (!file || busy) return
+    setCvError('')
+    setCvFailure(null)
+    setCvDone('')
+    setCvName(file.name)
+    setCvBusy('reading')
+    const r = await pdfToText(file)
+    if (!r.ok) {
+      setCvBusy('')
+      setCvText('')
+      setCvError(PDF_PROBLEM[r.reason])
+      return
+    }
+    setCvText(r.text)
+    void saveBaseCv(r.text)
+    await runCvImport(r.text)
+  }
+
+  async function runCvImport(text = cvText) {
+    if (!text) return
+    setCvFailure(null)
+    setCvDone('')
+    setCvBusy('importing')
+    const r = await callWorkflow<{ mapped: Mapped }>('cv-import', { cv_text: text })
+    setCvBusy('')
+    if (r.ok) {
+      const { form: next, filled } = applyImport(form, r.data.mapped || {})
+      setForm(next)
+      markFilled(filled, 'your CV')
+      setCvDone(filled.length ? `We filled in ${filled.length} field${filled.length === 1 ? '' : 's'} from your CV. Check them below.` : 'We read your CV, but your form already had those details, so nothing was changed.')
+      return
+    }
+    if (r.code === 'limit_reached' || r.code === 'not_signed_in') setCvFailure(r)
+    else if (r.code === 'bad_input') setCvFailure({ ...r, message: CV_UNREADABLE, retryable: false })
+    else setCvFailure({ ...r, code: 'import_failed', message: CV_IMPORT_FAILED, retryable: true })
+  }
+
+  // Keep the CV text on the student's account as their "Base CV" (one row; uploading again replaces it).
+  // Best effort: the form works even if this fails.
+  async function saveBaseCv(text: string) {
+    if (!supabase || !session) return
+    const { data, error } = await supabase.from('cv_versions').select('id')
+      .eq('label', 'Base CV').is('application_id', null).order('created_at', { ascending: false }).limit(1)
+    if (error) { console.error('Reading Base CV failed', error); return }
+    const res = data?.length
+      ? await supabase.from('cv_versions').update({ content_text: text }).eq('id', data[0].id)
+      : await supabase.from('cv_versions').insert({ label: 'Base CV', content_text: text })
+    if (res.error) console.error('Saving Base CV failed', res.error)
   }
 
   async function onContinue() {
@@ -97,38 +179,77 @@ export default function AboutYou({ editing, onSaved }: { editing: boolean; onSav
 
   return (
     <div className="stack-l" ref={topRef}>
-      {/* 1a. Optional LinkedIn import (also shown when editing later, so a failed import can be retried) */}
-      {(
-        <section className="card tint stack-m">
-          <div>
-            <h3>Import from LinkedIn <span className="muted small" style={{ fontWeight: 600 }}>(optional)</span></h3>
-            <p className="small muted">We read your public profile and fill in what we can. You check everything before saving.</p>
-          </div>
-          <label className="field">
-            <span className="label">Your LinkedIn profile link (optional)</span>
-            <div className="row" style={{ flexWrap: 'nowrap', alignItems: 'stretch' }}>
+      {/* 1a. Optional imports: LinkedIn or a CV (also shown when editing later, so a failed import can be retried) */}
+      <section className="card tint stack-m">
+        <div>
+          <h3>Fill this in faster <span className="muted small" style={{ fontWeight: 600 }}>(optional)</span></h3>
+          <p className="small muted">Import from LinkedIn or your CV and we fill in what we can. You check everything before saving.</p>
+        </div>
+
+        <div className="import-split">
+          {/* LinkedIn */}
+          <div className="stack-m">
+            <label className="field">
+              <span className="label">Your LinkedIn profile link</span>
               <input
-                className="inp grow" type="url" inputMode="url" autoComplete="url"
+                className="inp" type="url" inputMode="url" autoComplete="url"
                 placeholder="https://www.linkedin.com/in/your-name"
                 value={form.linkedin_url}
                 onChange={(e) => { set('linkedin_url', e.target.value); setLiError('') }}
                 aria-invalid={liError ? 'true' : undefined}
-                disabled={importing}
+                disabled={busy}
               />
+              {liError && <span className="small" style={{ color: 'var(--coral-d)' }}>{liError}</span>}
+            </label>
+            <div>
+              <button type="button" className="btn pri" onClick={runImport} disabled={busy || !form.linkedin_url.trim()}>
+                {importing ? <><span className="spinner" /> Importing…</> : 'Import from LinkedIn'}
+              </button>
             </div>
-            {liError && <span className="small" style={{ color: 'var(--coral-d)' }}>{liError}</span>}
-          </label>
-          <div className="row">
-            <button type="button" className="btn pri" onClick={runImport} disabled={importing || !form.linkedin_url.trim()}>
-              {importing ? <><span className="spinner" /> Importing…</> : 'Import my details'}
-            </button>
-            <span className="small muted">Or skip this and fill in the form below.</span>
           </div>
-          {importing && <div className="okbox row small" role="status"><span className="spinner" />Reading your public profile, this can take up to a minute...</div>}
-          {importDone && <div className="okbox small" role="status">{importDone}</div>}
-          {importFailure && <ErrorNotice failure={importFailure} onRetry={runImport} retrying={importing} onDismiss={() => setImportFailure(null)} />}
-        </section>
-      )}
+
+          <div className="import-or" aria-hidden="true"><span>or</span></div>
+
+          {/* CV */}
+          <div className="stack-m">
+            <div className="field">
+              <span className="label" id="cv-label">Your CV (PDF, up to {MAX_BYTES / 1024 / 1024} MB)</span>
+              <label
+                className={`cv-drop${dragging ? ' drag' : ''}${busy ? ' off' : ''}`}
+                onDragOver={(e) => { e.preventDefault(); if (!busy) setDragging(true) }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={(e) => { e.preventDefault(); setDragging(false); void onCvFile(e.dataTransfer.files?.[0]) }}
+              >
+                <input
+                  type="file" accept="application/pdf,.pdf" className="sr-only" aria-labelledby="cv-label"
+                  disabled={busy}
+                  onChange={(e) => { void onCvFile(e.target.files?.[0]); e.target.value = '' }}
+                />
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5" /><path d="M12 17v-6" /><path d="m9.5 13.5 2.5-2.5 2.5 2.5" />
+                </svg>
+                <span>
+                  {cvBusy === 'reading' ? <><span className="spinner" /> Reading your PDF…</>
+                    : cvBusy === 'importing' ? <><span className="spinner" /> Importing…</>
+                    : cvName ? <><b>{cvName}</b><span className="small muted"> · choose another</span></>
+                    : <><b>Upload your CV</b><span className="small muted"> or drag a PDF here</span></>}
+                </span>
+              </label>
+              {cvError && <span className="small" role="alert" style={{ color: 'var(--coral-d)' }}>{cvError}</span>}
+            </div>
+            <p className="small muted" style={{ margin: 0 }}>We read the text in your browser and keep it on your account as your Base CV for the CV studio. Uploading again replaces it.</p>
+          </div>
+        </div>
+
+        <span className="small muted">Or skip this and fill in the form below.</span>
+
+        {importing && <div className="okbox row small" role="status"><span className="spinner" />Reading your public profile, this can take up to a minute...</div>}
+        {cvBusy === 'importing' && <div className="okbox row small" role="status"><span className="spinner" />Reading your CV, this can take up to a minute...</div>}
+        {importDone && <div className="okbox small" role="status">{importDone}</div>}
+        {cvDone && <div className="okbox small" role="status">{cvDone}</div>}
+        {importFailure && <ErrorNotice failure={importFailure} onRetry={runImport} retrying={importing} onDismiss={() => setImportFailure(null)} />}
+        {cvFailure && <ErrorNotice failure={cvFailure} onRetry={() => void runCvImport()} retrying={cvBusy !== ''} onDismiss={() => setCvFailure(null)} />}
+      </section>
 
       {/* 1b. The form */}
       <section className="card stack-l">
@@ -138,10 +259,10 @@ export default function AboutYou({ editing, onSaved }: { editing: boolean; onSav
 
         <Group title="You">
           <div className="grid g2">
-            <Field label="Full name" required error={errors.full_name} li={fromLinkedIn.has('full_name')}>
+            <Field label="Full name" required error={errors.full_name} src={filledFrom.get('full_name')}>
               <input className="inp" autoComplete="name" value={form.full_name} onChange={(e) => set('full_name', e.target.value)} aria-invalid={errors.full_name ? 'true' : undefined} />
             </Field>
-            <Field label="City" required error={errors.city} li={fromLinkedIn.has('city')}>
+            <Field label="City" required error={errors.city} src={filledFrom.get('city')}>
               <select className="inp" value={form.city} onChange={(e) => set('city', e.target.value)} aria-invalid={errors.city ? 'true' : undefined}>
                 <option value="">Choose…</option>
                 {CITIES.map((c) => <option key={c}>{c}</option>)}
@@ -161,11 +282,11 @@ export default function AboutYou({ editing, onSaved }: { editing: boolean; onSav
 
         <Group title="Education">
           <div className="grid g2">
-            <Field label="University" required error={errors.university} li={fromLinkedIn.has('university')} wide hint="Start typing to search, or type your own">
+            <Field label="University" required error={errors.university} src={filledFrom.get('university')} wide hint="Start typing to search, or type your own">
               <input className="inp" list="universities" value={form.university} onChange={(e) => set('university', e.target.value)} aria-invalid={errors.university ? 'true' : undefined} />
               <datalist id="universities">{UNIVERSITIES.map((u) => <option key={u} value={u} />)}</datalist>
             </Field>
-            <Field label="Degree" required error={errors.degree} li={fromLinkedIn.has('degree')}>
+            <Field label="Degree" required error={errors.degree} src={filledFrom.get('degree')}>
               <select className="inp" value={form.degree} onChange={(e) => set('degree', e.target.value)} aria-invalid={errors.degree ? 'true' : undefined}>
                 <option value="">Choose…</option>
                 {DEGREES.map((d) => <option key={d}>{d}</option>)}
@@ -177,7 +298,7 @@ export default function AboutYou({ editing, onSaved }: { editing: boolean; onSav
                 <input className="inp" value={form.degreeOther} onChange={(e) => set('degreeOther', e.target.value)} aria-invalid={errors.degreeOther ? 'true' : undefined} />
               </Field>
             )}
-            <Field label="Major / field of study" required error={errors.major} li={fromLinkedIn.has('major')}>
+            <Field label="Major / field of study" required error={errors.major} src={filledFrom.get('major')}>
               <input className="inp" placeholder="e.g. Accounting and Finance" value={form.major} onChange={(e) => set('major', e.target.value)} aria-invalid={errors.major ? 'true' : undefined} />
             </Field>
             <Field label="Current year" required error={errors.study_year}>
@@ -186,7 +307,7 @@ export default function AboutYou({ editing, onSaved }: { editing: boolean; onSav
                 {STUDY_YEARS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               </select>
             </Field>
-            <Field label="Expected graduation year" required error={errors.grad_year} li={fromLinkedIn.has('grad_year')}>
+            <Field label="Expected graduation year" required error={errors.grad_year} src={filledFrom.get('grad_year')}>
               <input className="inp" inputMode="numeric" placeholder="e.g. 2027" value={form.grad_year} onChange={(e) => set('grad_year', e.target.value.replace(/\D/g, '').slice(0, 4))} aria-invalid={errors.grad_year ? 'true' : undefined} />
             </Field>
             <Field label="CGPA" error={errors.cgpa} hint="Optional — e.g. 3.25">
@@ -203,10 +324,10 @@ export default function AboutYou({ editing, onSaved }: { editing: boolean; onSav
         </Group>
 
         <Group title="Skills and experience">
-          <Field label={`Skills (up to ${MAX_SKILLS})`} error={errors.skills} li={fromLinkedIn.has('skills')} wide group hint="Type a skill and press Enter or comma">
+          <Field label={`Skills (up to ${MAX_SKILLS})`} error={errors.skills} src={filledFrom.get('skills')} wide group hint="Type a skill and press Enter or comma">
             <TagInput values={form.skills} onChange={(v) => set('skills', v)} max={MAX_SKILLS} />
           </Field>
-          <Field label="Languages" li={fromLinkedIn.has('languages')} wide group>
+          <Field label="Languages" src={filledFrom.get('languages')} wide group>
             <div className="row" style={{ gap: 8 }}>
               {LANGUAGES.map((l) => {
                 const on = form.languages.includes(l)
@@ -218,7 +339,7 @@ export default function AboutYou({ editing, onSaved }: { editing: boolean; onSav
               })}
             </div>
           </Field>
-          <Field label="Experience" li={fromLinkedIn.has('experience')} wide group hint="Internships, part-time jobs and society roles all count.">
+          <Field label="Experience" src={filledFrom.get('experience')} wide group hint="Internships, part-time jobs and society roles all count.">
             <ExperienceList rows={form.experience} onChange={(rows) => set('experience', rows)} />
           </Field>
         </Group>
@@ -270,15 +391,15 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
 
 // group = several controls inside (tags, language chips, experience rows): use a plain box, not a <label>,
 // so clicking the title doesn't press the first button inside.
-function Field({ label, required, error, hint, li, wide, group, children }: {
-  label: string; required?: boolean; error?: string; hint?: string; li?: boolean; wide?: boolean; group?: boolean; children: ReactNode
+function Field({ label, required, error, hint, src, wide, group, children }: {
+  label: string; required?: boolean; error?: string; hint?: string; src?: Source; wide?: boolean; group?: boolean; children: ReactNode
 }) {
   const Tag = group ? 'div' : 'label'
   return (
     <Tag className="field" style={wide ? { gridColumn: '1 / -1' } : undefined} {...(group ? { role: 'group', 'aria-label': label } : {})}>
       <span className="label">
         {label}{required && <span style={{ color: 'var(--coral-d)' }}> *</span>}{' '}
-        {li && <span className="chip teal" style={{ fontSize: 11, padding: '1px 7px' }}>from LinkedIn</span>}
+        {src && <span className="chip teal" style={{ fontSize: 11, padding: '1px 7px' }}>from {src}</span>}
       </span>
       {children}
       {error ? <span className="small" style={{ color: 'var(--coral-d)' }}>{error}</span> : hint ? <span className="small muted">{hint}</span> : null}
