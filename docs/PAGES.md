@@ -77,8 +77,11 @@ Three plan cards: **Free (PKR 0)**, **Pro (PKR 499/month, est.)**, **Premium (PK
 - **Reads:** `plan_limits`, `profiles.plan` (own). **Writes / webhooks:** none.
 - *Tested:* all 21 limits match `supabase/02_core_tables.sql` exactly, on desktop and phone; plus signed-out view, current-plan highlight, Upgrade → Coming soon, and a load failure → message + Try again.
 
-### `/privacy` — Placeholder (`src/pages/Placeholder.tsx`)
-"Privacy policy coming soon."
+### `/privacy` — Privacy (`src/pages/Privacy.tsx`)
+- Public page, linked from the footer and the sign-up page.
+- **The words come from `docs/content/privacy_page.md`** (written by the content owner). The page reads that file when the site is built, so **to change the text, edit the .md file only**; the site updates on the next deploy. Supported formatting: `# ` title, `## ` headings, `- ` bullets, `**bold**`; email addresses become mailto links.
+- Layout: title and intro on the green, an "On this page" list of section links (sticky on desktop, on top on phones) and the text in a white card, with Back to home / See plans at the end.
+- *Tested:* every line of the .md appears on the page, desktop and phone, the contents links jump to their section, no sideways scrolling.
 
 ### Any other address — "Page not found"
 

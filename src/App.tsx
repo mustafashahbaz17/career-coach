@@ -7,6 +7,7 @@ import PublicLayout from './components/PublicLayout'
 import RequireAuth from './auth/RequireAuth'
 import Landing from './pages/Landing'
 import Placeholder from './pages/Placeholder'
+import Privacy from './pages/Privacy'
 import Pricing from './pages/Pricing'
 import SignIn from './pages/auth/SignIn'
 import SignUp from './pages/auth/SignUp'
@@ -40,7 +41,7 @@ export default function App() {
         {/* Public */}
         <Route path="/" element={<Landing />} />
         <Route path="/pricing" element={<Pricing />} />
-        <Route path="/privacy" element={<Placeholder title="Privacy" text="Privacy policy coming soon." />} />
+        <Route path="/privacy" element={<Privacy />} />
 
         {/* Private (sign-in required) */}
         <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />

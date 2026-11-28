@@ -1,4 +1,4 @@
-// A simple "coming soon" page used for pages we haven't built yet (sign-in, sign-up, pricing, privacy).
+// A simple "coming soon" page used for pages we haven't built yet (today: "Page not found").
 import { Link } from 'react-router-dom'
 import BaraPose from '../components/mascot/BaraPose'
 import type { BaraPoseName } from '../components/mascot/baraPoses'
