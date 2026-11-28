@@ -186,8 +186,9 @@ def quiz_rows_for(case, user_id, kinds, options):
         if kind is None:
             problems.append(f"{qid} is not an active quiz question")
         elif kind == "text":
+            # Every row carries both keys: Supabase needs the same keys in every row of one insert.
             if str(value).strip():
-                rows.append({"user_id": user_id, "question_id": qid, "text_answer": str(value)})
+                rows.append({"user_id": user_id, "question_id": qid, "option_key": None, "text_answer": str(value)})
         else:
             keys = value if isinstance(value, list) else [value]
             if kind == "single" and len(keys) != 1:
@@ -195,7 +196,7 @@ def quiz_rows_for(case, user_id, kinds, options):
             for k in keys:
                 if (qid, k) not in options:
                     problems.append(f"{qid} has no option '{k}'")
-                rows.append({"user_id": user_id, "question_id": qid, "option_key": k})
+                rows.append({"user_id": user_id, "question_id": qid, "option_key": k, "text_answer": None})
     return rows, problems
 
 
@@ -206,9 +207,11 @@ def expected_text(workflow, case):
         if (case.get("kind") or "").strip().lower() == "mixed":
             return "needs_followup=true"
         return f"{case.get('expected_track', '').strip()} in top 3"
-    fields = ["university", "degree", "major", "grad_year", "experience_count"]
-    return "; ".join(f"{f}={case.get('expected_' + f, '').strip()}" for f in fields
+    fields = ["full_name", "city", "university", "degree", "major", "grad_year", "experience_count"]
+    text = "; ".join(f"{f}={case.get('expected_' + f, '').strip()}" for f in fields
                      if (case.get("expected_" + f) or "").strip())
+    lists = [f for f in ["skills", "languages", "experience", "education"] if (case.get(f"expected_{f}_json") or "").strip()]
+    return text + (f"; exact {', '.join(lists)} lists (see case file)" if lists else "")
 
 
 def norm(v):
@@ -239,13 +242,31 @@ def judge(workflow, case, status, reply):
     # linkedin-import: every filled-in expected field must match
     mapped = reply.get("mapped") or {}
     misses = []
-    for f in ["university", "degree", "major", "grad_year"]:
+    for f in ["full_name", "city", "university", "degree", "major", "grad_year"]:
         want = (case.get("expected_" + f) or "").strip()
         if want and norm(mapped.get(f)) != norm(want):
             misses.append(f"{f}: got {mapped.get(f)!r}")
     want_n = (case.get("expected_experience_count") or "").strip()
     if want_n and len(mapped.get("experience") or []) != int(want_n):
         misses.append(f"experience_count: got {len(mapped.get('experience') or [])}")
+    # Lists given as JSON: the same items must come back (order ignored), nothing missing, nothing extra.
+    for f in ["skills", "languages"]:
+        raw = (case.get(f"expected_{f}_json") or "").strip()
+        if raw and sorted(map(norm, mapped.get(f) or [])) != sorted(map(norm, json.loads(raw))):
+            misses.append(f"{f}: got {mapped.get(f)!r}")
+    for f, keys in [("experience", ("title", "org", "start", "end")),
+                    ("education", ("school", "degree", "field", "start", "end"))]:
+        raw = (case.get(f"expected_{f}_json") or "").strip()
+        if not raw:
+            continue
+        key = lambda e: tuple(norm(e.get(k)) for k in keys)
+        want_rows = sorted(key(e) for e in json.loads(raw))
+        got_rows = sorted(key(e) for e in mapped.get(f) or [] if isinstance(e, dict))
+        if want_rows != got_rows:
+            missing = [r for r in want_rows if r not in got_rows]
+            extra = [r for r in got_rows if r not in want_rows]
+            misses.append(f"{f}: {len(missing)} missing or wrong, {len(extra)} extra" +
+                          (f" (first wrong: {' | '.join(extra[0])})" if extra else ""))
     return not misses, "; ".join(misses) or "all expected fields match"
 
 
@@ -264,6 +285,8 @@ def main():
     p.add_argument("--yes", action="store_true", help="skip the typed YES confirmation (use only after agreeing)")
     p.add_argument("--only", help="comma-separated case ids to run")
     p.add_argument("--max", type=int, help="run at most this many cases")
+    p.add_argument("--path", help="webhook path to call instead of the workflow name, e.g. linkedin-import-test")
+    p.add_argument("--wf-name", help="n8n workflow name to read the version from (default: the workflow name)")
     args = p.parse_args()
 
     cfg = WORKFLOWS[args.workflow]
@@ -303,7 +326,7 @@ def main():
     limit = limit_rows[0]["monthly_limit"] if limit_rows else 0
     usage_rows = sb.get(f"monthly_usage?select=runs&feature=eq.{args.workflow}&user_id=eq.{sb.user_id}")
     used = usage_rows[0]["runs"] if usage_rows else 0
-    wf_id, wf_version, wf_updated = workflow_version(args.workflow)
+    wf_id, wf_version, wf_updated = workflow_version(args.wf_name or args.workflow)
 
     print(f"\nPLAN for {args.workflow}")
     print(f"  live workflow:   id {wf_id}, version {wf_version}, updated {wf_updated}")
@@ -333,19 +356,21 @@ def main():
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     out_path = RESULTS_DIR / f"{args.workflow}_{stamp}.csv"
-    url = f"{N8N_BASE}/webhook/{args.workflow}"
+    url = f"{N8N_BASE}/webhook/{args.path or args.workflow}"
+    print(f"Calling {url}")
     passed = 0
 
     with out_path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=RESULT_COLUMNS)
         writer.writeheader()
         for i, case in enumerate(cases, 1):
-            note = ""
+            note, setup_failed = "", False
             if args.workflow == "onboard-tracks":
                 rows, _ = quiz_rows_for(case, sb.user_id, kinds, options)
                 err = sb.replace_quiz_answers(rows)
                 if err:
-                    status, reply, latency, ok, note = None, None, 0, False, err
+                    # The runner itself failed: the webhook was never called, so this is not a workflow fail.
+                    status, reply, latency, ok, note, setup_failed = None, None, 0, False, "NOT SENT: " + err, True
             if not note:
                 body = {} if args.workflow == "onboard-tracks" else {"linkedin_url": case.get("linkedin_url", "")}
                 status, reply, latency = http(
@@ -359,7 +384,7 @@ def main():
                 "input": input_text(args.workflow, case),
                 "expected": expected_text(args.workflow, case),
                 "actual": json.dumps(reply, ensure_ascii=False) if isinstance(reply, (dict, list)) else (reply or ""),
-                "pass": "yes" if ok else "no",
+                "pass": "not run" if setup_failed else ("yes" if ok else "no"),
                 "http_status": status if status is not None else "",
                 "latency_ms": latency,
                 "run_date": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -367,7 +392,8 @@ def main():
                 "notes": " | ".join(x for x in [note, case.get("notes", "")] if x),
             })
             f.flush()
-            print(f"  [{i}/{len(cases)}] {case['id']}: {'PASS' if ok else 'FAIL'} ({note})")
+            label = "NOT RUN" if setup_failed else ("PASS" if ok else "FAIL")
+            print(f"  [{i}/{len(cases)}] {case['id']}: {label} ({note})")
             if isinstance(reply, dict) and reply.get("code") == "limit_reached" \
                     and (case.get("expected_code") or "").strip() != "limit_reached":
                 print("  Monthly limit reached, so the remaining cases were not sent.")

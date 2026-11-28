@@ -26,3 +26,6 @@ dist-ssr
 # secrets
 .env
 .env.*
+
+# raw Apify scraper output (people's full LinkedIn profiles; kept local for offline tests)
+tests/linkedin_raw/
