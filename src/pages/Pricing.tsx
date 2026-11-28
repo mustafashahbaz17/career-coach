@@ -29,6 +29,7 @@ const LABELS: [string, string][] = [
   ['interview-session', 'Interview practice sessions'],
   ['negotiation-draft', 'Negotiation email drafts'],
   ['vent-message', 'Vent space messages'],
+  ['opportunity-matches', 'Match refreshes'],
 ]
 const labelFor = (f: string) => LABELS.find(([k]) => k === f)?.[1] ?? f.replace(/-/g, ' ').replace(/^\w/, (c) => c.toUpperCase())
 

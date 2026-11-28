@@ -7,6 +7,7 @@ import PublicLayout from './components/PublicLayout'
 import RequireAuth from './auth/RequireAuth'
 import Landing from './pages/Landing'
 import Placeholder from './pages/Placeholder'
+import Privacy from './pages/Privacy'
 import Pricing from './pages/Pricing'
 import SignIn from './pages/auth/SignIn'
 import SignUp from './pages/auth/SignUp'
@@ -18,6 +19,8 @@ import Onboarding from './pages/onboarding/Onboarding'
 import Dashboard from './pages/app/Dashboard'
 import History from './pages/app/History'
 import Vent from './pages/app/Vent'
+import Matches from './pages/app/Matches'
+import Tracker from './pages/app/Tracker'
 
 export default function App() {
   // Welcome splash with Bara: decided once, when the site first loads (first visit this browser session).
@@ -40,13 +43,15 @@ export default function App() {
         {/* Public */}
         <Route path="/" element={<Landing />} />
         <Route path="/pricing" element={<Pricing />} />
-        <Route path="/privacy" element={<Placeholder title="Privacy" text="Privacy policy coming soon." />} />
+        <Route path="/privacy" element={<Privacy />} />
 
         {/* Private (sign-in required) */}
         <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
         <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
         <Route path="/history" element={<RequireAuth><History /></RequireAuth>} />
         <Route path="/vent" element={<RequireAuth><Vent /></RequireAuth>} />
+        <Route path="/matches" element={<RequireAuth><Matches /></RequireAuth>} />
+        <Route path="/tracker" element={<RequireAuth><Tracker /></RequireAuth>} />
         <Route path="/pricing/upgrade" element={<RequireAuth><ComingNext title="Upgrade" text="Upgrading is coming soon." /></RequireAuth>} />
         <Route path="/system-check" element={<RequireAuth><SystemCheck /></RequireAuth>} />
 

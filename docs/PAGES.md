@@ -63,7 +63,7 @@ One component shows Bara in any of his five moods (generated from the same drawi
 - **oops** — every error message (`ErrorNotice`: "Our AI is having a moment…", saving failed, etc.) and the Page-not-found page.
 - **deadline** — the dashboard's Tracker card (deadlines).
 - **vent** — the dashboard's Vent space card, the Vent space page header, and next to each of Bara's replies there.
-The Tracker card is still "Coming soon"; Bara moves into that page when it's built.
+Bara also appears on the Matches first-visit card (offer) and the empty Tracker (deadline).
 
 ## Public pages (no sign-in needed)
 
@@ -72,13 +72,16 @@ Tells a stranger who Career Coach is for, what it does and what it costs. Sectio
 - **Reads / writes / webhooks:** none. No testimonials, user counts or partner logos (course rule).
 
 ### `/pricing` — Plans (`src/pages/Pricing.tsx`)
-Three plan cards: **Free (PKR 0)**, **Pro (PKR 499/month, est.)**, **Premium (PKR 999/month, est.)**. Each card lists its monthly limits, **read from the `plan_limits` table** — nothing is typed into the page, so the numbers always match what n8n enforces. Feature names map to friendly labels (`cv-review` → "CV reviews", etc.); `0` shows as "—" (not on that plan). A signed-in student's current plan is outlined and labelled "Your plan"; **Upgrade** buttons say "Coming soon" until the upgrade workflow exists. Signed-out visitors see the plans and prices with Start free buttons.
+Three plan cards: **Free (PKR 0)**, **Pro (PKR 499/month, est.)**, **Premium (PKR 999/month, est.)**. Each card lists its monthly limits, **read from the `plan_limits` table** — nothing is typed into the page, so the numbers always match what n8n enforces. Feature names map to friendly labels (`cv-review` → "CV reviews", `opportunity-matches` → "Match refreshes", etc.); `0` shows as "—" (not on that plan). A signed-in student's current plan is outlined and labelled "Your plan"; **Upgrade** buttons say "Coming soon" until the upgrade workflow exists. Signed-out visitors see the plans and prices with Start free buttons.
 - **Note:** `plan_limits` is currently readable by **signed-in accounts only** (data lead's rule), so signed-out visitors see "Sign in to see each plan's exact monthly limits" instead of the numbers. If the data lead allows `anon` to read it, the numbers appear for everyone with no website change.
 - **Reads:** `plan_limits`, `profiles.plan` (own). **Writes / webhooks:** none.
 - *Tested:* all 21 limits match `supabase/02_core_tables.sql` exactly, on desktop and phone; plus signed-out view, current-plan highlight, Upgrade → Coming soon, and a load failure → message + Try again.
 
-### `/privacy` — Placeholder (`src/pages/Placeholder.tsx`)
-"Privacy policy coming soon."
+### `/privacy` — Privacy (`src/pages/Privacy.tsx`)
+- Public page, linked from the footer and the sign-up page.
+- **The words come from `docs/content/privacy_page.md`** (written by the content owner). The page reads that file when the site is built, so **to change the text, edit the .md file only**; the site updates on the next deploy. Supported formatting: `# ` title, `## ` headings, `- ` bullets, `**bold**`; email addresses become mailto links.
+- Layout: title and intro on the green, an "On this page" list of section links (sticky on desktop, on top on phones) and the text in a white card, with Back to home / See plans at the end.
+- *Tested:* every line of the .md appears on the page, desktop and phone, the contents links jump to their section, no sideways scrolling.
 
 ### Any other address — "Page not found"
 
@@ -132,7 +135,8 @@ Opened from the reset email (Supabase signs the student in from the link). Saves
 Where a student lands after onboarding. Greets them by first name and shows their **plan** as a badge (links to Pricing).
 - **Profile summary:** university, degree and major, current year, graduation year — with **Edit details**, which opens the About-you form at `/onboarding?edit=1` (saving there returns to the dashboard and never sends them back through the quiz).
 - **Career tracks:** the latest **`interest_results`** row (3 tracks with the AI's reasons and the date). If there isn't one yet, the top 3 from **`quiz_track_scores`**, labelled "Based on your quiz answers". No quiz yet → "No career tracks yet" with a button to take it.
-- **Coming soon** cards: Opportunity matches, Tracker, CV studio, Interview practice (Premium). The **Vent space** card is live and opens `/vent`.
+- **Your tools** cards: **Opportunity matches**, **Tracker** and **Vent space** open their pages; CV studio and Interview practice (Premium) say Coming soon.
+- **Email reminders** switch under the profile summary.
 - If onboarding isn't finished, a "Finish setting up" banner links back to it.
 - **Reads:** `profiles` (own), `interest_results` (own), `quiz_track_scores` (own), `career_tracks`. **Writes / webhooks:** none.
 
@@ -143,6 +147,27 @@ Everything the student has run, **newest first**: career-track reports (**`inter
 **Only your own data:** every query on these pages filters by the signed-in student's id, and row-level security in Supabase blocks other students' rows anyway.
 
 *Tested* with a fake Supabase (a student with results, a brand-new student, and a quiz-only student) on desktop and phone: 36/36 checks pass, including the Edit details round trip and that every query asks only for the student's own rows.
+
+### `/matches` — Opportunity matches (`src/pages/app/Matches.tsx`)
+- **What it's for:** openings the student is eligible for, ranked by the AI, with why they qualify and what they're missing. Linked from the top bar and the dashboard.
+- **On load (no AI run):** reads the last ranked list from the **`my_ranked_matches`** view (own rows only, ordered by `rank`) and which opportunities are already on the tracker (`applications.opportunity_id`). First visit with no list → a "Find my matches" card with Bara.
+- **Find / Refresh my matches:** calls n8n **`opportunity-matches`** with `{}` (60-second timeout). Reply: `{ ok, matches: [...], total_eligible, more_on_paid_plan }` (contract from the data lead's `eliza_workflows.md`). Codes: `bad_input` → "Finish your profile and quiz first…" with a Finish setting up button; `limit_reached`, `not_signed_in`, `ai_unavailable` → the usual messages. Empty list → "No open opportunities match you yet."
+- **Each card:** kind, **Sample** label (`is_sample`), **Not yet verified** label (`verified = false`), title, organisation, city/Remote, deadline with days left (orange when 3 days or less), fit score out of 100 (a 0–1 score is shown ×100), **Why you qualify**, **What you're missing** (hidden when empty), **Apply ↗** (new tab), **Save to tracker** (inserts `opportunity_id, title, organisation, deadline, apply_url`, status `saved`; replaced by "✓ In your tracker" once saved or when `in_tracker` is true).
+- `more_on_paid_plan` → "See all your matches on Pro" banner; `total_eligible` → "Showing 3 of 9 opportunities you're eligible for."
+- **Reads:** `my_ranked_matches`, own `applications`. **Writes:** own `applications`. **Webhooks:** `opportunity-matches`.
+
+### `/tracker` — Application tracker (`src/pages/app/Tracker.tsx`)
+- **What it's for:** every application on one board (no AI). Linked from the top bar, the dashboard and the Matches page.
+- **Board:** six columns from `applications.status`: Saved, Applied, Interview, Offer, Rejected, Withdrawn, each with a count and a **+** to add straight into it. On phones the columns scroll sideways one at a time.
+- **Moving cards:** each card's **Move to** menu (works on every device), or drag a card to another column on desktop. Moving to Applied fills `applied_on` with today's date if empty. Changes show at once and are put back if saving fails ("We couldn't save that change…").
+- **Cards:** title, organisation, deadline with days left (orange when 3 days or less while in Saved), Open link ↗, a **Reminders** switch (`remind`) with a short note (no deadline, not in Saved, or email reminders off), **×** to remove (asks first).
+- **Add an application:** title*, organisation*, deadline, link (`sample.com/jobs` is accepted and saved as `https://sample.com/jobs`).
+- **Free plan limit:** up to 10 cards (the landing page plan text). The website counts before adding (`src/lib/tracker.ts`), here and on Matches; at 10 the Add button is disabled with a message and a link to plans. Pro and Premium are unlimited.
+- **Email reminders switch** at the top (see below). Reminder emails are sent by n8n 3 days and 1 day before the deadline, only for cards still in Saved with Reminders on, and only if Email reminders is on.
+- **Reads/writes:** own `applications`, own `profiles.email_reminders`. **Webhooks:** none.
+
+### Email reminders switch (`src/components/EmailRemindersToggle.tsx`)
+- On the **Dashboard** (under the profile summary) and the **Tracker**. Updates `profiles.email_reminders` (students may change it); the text says which email address reminders go to.
 
 ### `/vent` — Vent space (`src/pages/app/Vent.tsx`)
 - **What it's for:** a calm, private chat with Bara about recruitment stress (every plan). Linked from the top bar and the dashboard's Vent space card.
@@ -165,4 +190,4 @@ Not linked anywhere. Shows which n8n base URL the site is using and has a button
 ### Top bar and footer (`src/components/PublicLayout.tsx`)
 Wraps every page except the account pages.
 - **Signed out:** logo, Pricing, Sign in, Get started free (on phones Pricing is hidden in the bar and the button reads "Start free", so it fits on one line).
-- **Signed in:** **Dashboard / History / Vent space / Pricing** links (the current page is highlighted), the student's email and a **Sign out** button. On phones the links and "Signed in as …" sit in a row under the bar.
+- **Signed in:** **Dashboard / Matches / Tracker / History / Vent space / Pricing** links (the email address hides below 1100 px wide; on phones the links scroll sideways) (the current page is highlighted), the student's email and a **Sign out** button. On phones the links and "Signed in as …" sit in a row under the bar.
