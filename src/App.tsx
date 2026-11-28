@@ -19,6 +19,8 @@ import Onboarding from './pages/onboarding/Onboarding'
 import Dashboard from './pages/app/Dashboard'
 import History from './pages/app/History'
 import Vent from './pages/app/Vent'
+import Matches from './pages/app/Matches'
+import Tracker from './pages/app/Tracker'
 
 export default function App() {
   // Welcome splash with Bara: decided once, when the site first loads (first visit this browser session).
@@ -48,6 +50,8 @@ export default function App() {
         <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
         <Route path="/history" element={<RequireAuth><History /></RequireAuth>} />
         <Route path="/vent" element={<RequireAuth><Vent /></RequireAuth>} />
+        <Route path="/matches" element={<RequireAuth><Matches /></RequireAuth>} />
+        <Route path="/tracker" element={<RequireAuth><Tracker /></RequireAuth>} />
         <Route path="/pricing/upgrade" element={<RequireAuth><ComingNext title="Upgrade" text="Upgrading is coming soon." /></RequireAuth>} />
         <Route path="/system-check" element={<RequireAuth><SystemCheck /></RequireAuth>} />
 

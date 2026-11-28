@@ -3,7 +3,8 @@
 //  - Profile summary (university, major, graduation year) with "Edit details" → /onboarding?edit=1.
 //  - Their latest AI career tracks from `interest_results` (with reasons), or — if there are none yet —
 //    the top 3 from `quiz_track_scores`.
-//  - "Coming soon" cards for the features still being built.
+//  - Tool cards: Matches, Tracker and Vent space open their pages; the rest say "Coming soon".
+//  - Email reminders switch (profiles.email_reminders) next to the profile summary.
 // Reads: profiles (own, via useAuth), interest_results (own), quiz_track_scores (own), career_tracks. Writes: nothing. Webhooks: none.
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -12,6 +13,7 @@ import { useAuth } from '../../auth/AuthProvider'
 import ErrorNotice from '../../components/ErrorNotice'
 import Icon, { type IconName } from '../../components/Icon'
 import TrackCards, { toShownTrack, type ShownTrack } from '../../components/TrackCards'
+import EmailRemindersToggle from '../../components/EmailRemindersToggle'
 import BaraPose from '../../components/mascot/BaraPose'
 import type { BaraPoseName } from '../../components/mascot/baraPoses'
 
@@ -20,8 +22,8 @@ const PLAN_LABEL: Record<string, string> = { free: 'Free plan', pro: 'Pro plan',
 const YEAR_LABEL: Record<string, string> = { '1st': '1st year', '2nd': '2nd year', '3rd': '3rd year', '4th': '4th year', '5th': '5th year', graduated: 'Graduated' }
 
 const COMING: { title: string; text: string; icon: IconName; premium?: boolean; bara?: BaraPoseName; to?: string }[] = [
-  { title: 'Opportunity matches', text: 'Programmes you’re eligible for, with why you qualify and what you’re missing.', icon: 'search' },
-  { title: 'Tracker', text: 'Every application on one board, with deadline reminders.', icon: 'board', bara: 'deadline' },
+  { title: 'Opportunity matches', text: 'Programmes you’re eligible for, with why you qualify and what you’re missing.', icon: 'search', to: '/matches' },
+  { title: 'Tracker', text: 'Every application on one board, with deadline reminders.', icon: 'board', bara: 'deadline', to: '/tracker' },
   { title: 'CV studio', text: 'Tailor your CV to each role — you accept or reject every change.', icon: 'cv' },
   { title: 'Interview practice', text: 'Timed mock interviews with scored feedback.', icon: 'mic', premium: true },
   { title: 'Vent space', text: 'A calm, private place to talk through recruitment stress.', icon: 'shield', bara: 'vent', to: '/vent' },
@@ -108,6 +110,7 @@ export default function Dashboard() {
             )}
           </div>
           <Link className="btn sm" to={onboarded ? '/onboarding?edit=1' : '/onboarding'}>Edit details</Link>
+          <div className="dash-reminders"><EmailRemindersToggle /></div>
         </section>
 
         {/* Career tracks */}
@@ -136,9 +139,9 @@ export default function Dashboard() {
           )}
         </section>
 
-        {/* Coming soon */}
-        <section className="stack-m" aria-label="Coming soon">
-          <h2>Coming soon</h2>
+        {/* Tools: live ones open, the rest say Coming soon */}
+        <section className="stack-m" aria-label="Your tools">
+          <h2>Your tools</h2>
           <div className="grid g3">
             {COMING.map((c) => {
               const body = (

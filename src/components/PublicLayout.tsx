@@ -13,6 +13,8 @@ function AppLinks() {
   return (
     <>
       <NavLink className={cls} to="/dashboard">Dashboard</NavLink>
+      <NavLink className={cls} to="/matches">Matches</NavLink>
+      <NavLink className={cls} to="/tracker">Tracker</NavLink>
       <NavLink className={cls} to="/history">History</NavLink>
       <NavLink className={cls} to="/vent">Vent space</NavLink>
       <NavLink className={cls} to="/pricing" end>Pricing</NavLink>
@@ -50,7 +52,7 @@ export default function PublicLayout() {
         <div className="grow" />
         {session ? (
           <>
-            <span className="small muted desk-only" title="Signed in">{session.user.email}</span>
+            <span className="small muted desk-only nav-email" title="Signed in">{session.user.email}</span>
             <button className="btn sm" onClick={onSignOut}>Sign out</button>
           </>
         ) : (
@@ -67,7 +69,7 @@ export default function PublicLayout() {
       </header>
       {session && (
         <div className="mob-only blk" style={{ padding: '8px 10px 0' }}>
-          <nav className="row" style={{ gap: 4 }} aria-label="Main"><AppLinks /></nav>
+          <nav className="row mob-nav" style={{ gap: 4 }} aria-label="Main"><AppLinks /></nav>
           <div className="small muted" style={{ padding: '4px 6px 0' }}>Signed in as <b>{session.user.email}</b></div>
         </div>
       )}

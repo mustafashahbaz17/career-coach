@@ -107,3 +107,66 @@ a.card-link:focus-visible{outline:2px solid var(--bright,#3DDC97);outline-offset
   .privacy-grid{grid-template-columns:1fr}
   .privacy-toc{position:static}
 }
+
+/* On/off switch (Email reminders, per-card Reminders) */
+.switch-row{display:inline-flex;align-items:center;gap:10px;cursor:pointer}
+.switch{position:relative;flex:none;width:42px;height:24px;border-radius:99px;border:0;padding:0;background:#C9D6D2;cursor:pointer;transition:background .15s}
+.switch .knob{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s}
+.switch.on{background:var(--teal)}
+.switch.on .knob{transform:translateX(18px)}
+.switch.sm{width:34px;height:20px}
+.switch.sm .knob{width:14px;height:14px}
+.switch.sm.on .knob{transform:translateX(14px)}
+.switch:focus-visible{outline:2px solid var(--bright,#3DDC97);outline-offset:2px}
+.switch:disabled{opacity:.6;cursor:default}
+@media (prefers-reduced-motion:reduce){.switch,.switch .knob{transition:none}}
+
+/* Top bar: more links now, so tighten on mid-size screens and let the phone row scroll sideways */
+@media (max-width:1100px){.nav-email{display:none!important}}
+.mob-nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.mob-nav::-webkit-scrollbar{display:none}
+.mob-nav .btn{flex:none}
+
+/* Dashboard: email switch next to the profile summary */
+.dash-reminders{flex-basis:100%;border-top:1px solid var(--line);padding-top:12px}
+
+/* Matches */
+.match-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));gap:16px}
+.match-card{gap:10px}
+.fit{flex:none;display:flex;flex-direction:column;align-items:center;min-width:64px;padding:6px 8px;border-radius:12px;background:var(--teal-l)}
+.fit b{font-size:24px;line-height:1;color:var(--teal-d)}
+.fit-bar{display:block;width:44px;height:4px;border-radius:2px;background:#fff;margin-top:5px;overflow:hidden}
+.fit-bar i{display:block;height:100%;background:var(--teal)}
+.match-why{border-left:3px solid var(--teal);padding:2px 0 2px 12px}
+.match-miss{border-left:3px solid var(--coral,#FF7A1A);padding:2px 0 2px 12px}
+.warn-chip{border-color:#F2B48A;color:#A4501A}
+
+/* Tracker */
+.tracker-settings{max-width:360px;padding:14px 16px}
+.tracker-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.board{display:grid;grid-template-columns:repeat(6,minmax(220px,1fr));gap:12px;overflow-x:auto;padding-bottom:10px;scroll-snap-type:x proximity}
+.board-col{display:flex;flex-direction:column;gap:10px;min-height:180px;padding:12px;border-radius:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);scroll-snap-align:start;transition:background .15s,border-color .15s}
+.board-col header b{color:#EEF7F3}
+.board-col .count{display:inline-block;min-width:22px;padding:0 7px;margin-left:4px;border-radius:99px;background:rgba(255,255,255,.16);font-size:12px;text-align:center}
+.board-col .add-here{color:#EEF7F3;padding:2px 10px;font-size:18px;line-height:1}
+.board-col.drop{background:rgba(61,220,151,.18);border-color:var(--bright,#3DDC97)}
+.board-empty{color:rgba(238,247,243,.6)!important;margin:6px 2px}
+.tcard{--muted:#5F6F70;--ink:#0F292A;display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:12px;background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.12);cursor:grab}
+.tcard.dragging{opacity:.5}
+.tcard-title{overflow-wrap:anywhere;line-height:1.3}
+.tcard a{color:var(--teal-d)}
+.tcard-move{padding:6px 8px;font-size:13px;min-height:0;width:100%}
+.tcard .muted{color:#5F6F70}
+.tcard-x{flex:none;border:0;background:transparent;color:#8A9796;font-size:20px;line-height:1;padding:0 2px;cursor:pointer;border-radius:6px}
+.tcard-x:hover{color:var(--coral-d,#C2410C);background:#FFF1E8}
+.tcard-x:focus-visible{outline:2px solid var(--teal);outline-offset:1px}
+.tcard-confirm{background:#FFF6EF;border-radius:8px;padding:6px 8px}
+.tcard .switch-row{align-items:flex-start}
+.tcard .switch-row > span{line-height:1.35}
+@media (max-width:700px){
+  .tracker-form-grid{grid-template-columns:1fr}
+  .board{grid-template-columns:repeat(6,minmax(78vw,1fr))}
+  .tracker-settings{max-width:none}
+}
+
+.email-rem{display:flex;flex-direction:column;gap:6px}
