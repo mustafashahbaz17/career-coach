@@ -62,8 +62,8 @@ One component shows Bara in any of his five moods (generated from the same drawi
 - **offer** — the results screen when your career tracks appear.
 - **oops** — every error message (`ErrorNotice`: "Our AI is having a moment…", saving failed, etc.) and the Page-not-found page.
 - **deadline** — the dashboard's Tracker card (deadlines).
-- **vent** — the dashboard's Vent space card.
-The Tracker and Vent space cards are still "Coming soon"; Bara moves into those pages when they're built.
+- **vent** — the dashboard's Vent space card, the Vent space page header, and next to each of Bara's replies there.
+The Tracker card is still "Coming soon"; Bara moves into that page when it's built.
 
 ## Public pages (no sign-in needed)
 
@@ -132,7 +132,7 @@ Opened from the reset email (Supabase signs the student in from the link). Saves
 Where a student lands after onboarding. Greets them by first name and shows their **plan** as a badge (links to Pricing).
 - **Profile summary:** university, degree and major, current year, graduation year — with **Edit details**, which opens the About-you form at `/onboarding?edit=1` (saving there returns to the dashboard and never sends them back through the quiz).
 - **Career tracks:** the latest **`interest_results`** row (3 tracks with the AI's reasons and the date). If there isn't one yet, the top 3 from **`quiz_track_scores`**, labelled "Based on your quiz answers". No quiz yet → "No career tracks yet" with a button to take it.
-- **Coming soon** cards: Opportunity matches, Tracker, CV studio, Interview practice (Premium), Vent space.
+- **Coming soon** cards: Opportunity matches, Tracker, CV studio, Interview practice (Premium). The **Vent space** card is live and opens `/vent`.
 - If onboarding isn't finished, a "Finish setting up" banner links back to it.
 - **Reads:** `profiles` (own), `interest_results` (own), `quiz_track_scores` (own), `career_tracks`. **Writes / webhooks:** none.
 
@@ -143,6 +143,15 @@ Everything the student has run, **newest first**: career-track reports (**`inter
 **Only your own data:** every query on these pages filters by the signed-in student's id, and row-level security in Supabase blocks other students' rows anyway.
 
 *Tested* with a fake Supabase (a student with results, a brand-new student, and a quiz-only student) on desktop and phone: 36/36 checks pass, including the Edit details round trip and that every query asks only for the student's own rows.
+
+### `/vent` — Vent space (`src/pages/app/Vent.tsx`)
+- **What it's for:** a calm, private chat with Bara about recruitment stress (every plan). Linked from the top bar and the dashboard's Vent space card.
+- **Layout:** chat on the left (history, typing dots, message box with a 2,000-character counter; Enter sends, Shift+Enter adds a line), and two side cards: **Not a crisis service** (always shows Rescue 1122, plus "Show helplines") and **Your privacy** (who can see messages, "Delete my history" with an inline "this can't be undone" check).
+- **Empty state:** three example starters; clicking one fills the box but sends nothing.
+- **Sending:** calls n8n **`vent-message`** with `{"message": "..."}` (60-second timeout). Expected reply: `{"ok": true, "reply": "...", "safety_label": "ok"|"distress"|"crisis", "show_helplines": true|false}`; n8n saves both messages to `vent_messages`. If it fails, the bubble is taken back and the words go back in the box, with Try again. `bad_input` → "That message couldn't be sent…".
+- **Safety:** when `show_helplines` is true (or the label is `crisis`), a clear helpline card appears above Bara's reply and the side list opens. On reload the card stays on that reply (`showed_helplines`). Helplines live in **`src/lib/helplines.ts`**: only numbers that two recent sources agree on (1122, 1166, Punjab 15 then 7, Taskeen 0316-8275336). The data lead should call each once to confirm.
+- **`vent-message` is a proposed contract**: it needs the team to agree and add it to the Shared contracts. Until the n8n workflow is live, sending shows "Our AI is having a moment…" and nothing is lost.
+- **Reads/writes:** reads own `vent_messages`; deletes own `vent_messages`. **Webhooks:** `vent-message` (proposed).
 
 ### `/pricing/upgrade` — Temporary (`src/pages/app/ComingNext.tsx`)
 Placeholder until upgrades are wired to n8n.
@@ -156,4 +165,4 @@ Not linked anywhere. Shows which n8n base URL the site is using and has a button
 ### Top bar and footer (`src/components/PublicLayout.tsx`)
 Wraps every page except the account pages.
 - **Signed out:** logo, Pricing, Sign in, Get started free (on phones Pricing is hidden in the bar and the button reads "Start free", so it fits on one line).
-- **Signed in:** **Dashboard / History / Pricing** links (the current page is highlighted), the student's email and a **Sign out** button. On phones the links and "Signed in as …" sit in a row under the bar.
+- **Signed in:** **Dashboard / History / Vent space / Pricing** links (the current page is highlighted), the student's email and a **Sign out** button. On phones the links and "Signed in as …" sit in a row under the bar.

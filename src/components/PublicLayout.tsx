@@ -14,6 +14,7 @@ function AppLinks() {
     <>
       <NavLink className={cls} to="/dashboard">Dashboard</NavLink>
       <NavLink className={cls} to="/history">History</NavLink>
+      <NavLink className={cls} to="/vent">Vent space</NavLink>
       <NavLink className={cls} to="/pricing" end>Pricing</NavLink>
     </>
   )

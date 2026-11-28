@@ -19,12 +19,12 @@ const LOAD_FAILED = { code: 'load_failed', message: 'We couldn’t load your tra
 const PLAN_LABEL: Record<string, string> = { free: 'Free plan', pro: 'Pro plan', premium: 'Premium plan' }
 const YEAR_LABEL: Record<string, string> = { '1st': '1st year', '2nd': '2nd year', '3rd': '3rd year', '4th': '4th year', '5th': '5th year', graduated: 'Graduated' }
 
-const COMING: { title: string; text: string; icon: IconName; premium?: boolean; bara?: BaraPoseName }[] = [
+const COMING: { title: string; text: string; icon: IconName; premium?: boolean; bara?: BaraPoseName; to?: string }[] = [
   { title: 'Opportunity matches', text: 'Programmes you’re eligible for, with why you qualify and what you’re missing.', icon: 'search' },
   { title: 'Tracker', text: 'Every application on one board, with deadline reminders.', icon: 'board', bara: 'deadline' },
   { title: 'CV studio', text: 'Tailor your CV to each role — you accept or reject every change.', icon: 'cv' },
   { title: 'Interview practice', text: 'Timed mock interviews with scored feedback.', icon: 'mic', premium: true },
-  { title: 'Vent space', text: 'A calm, private place to talk through recruitment stress.', icon: 'shield', bara: 'vent' },
+  { title: 'Vent space', text: 'A calm, private place to talk through recruitment stress.', icon: 'shield', bara: 'vent', to: '/vent' },
 ]
 
 export default function Dashboard() {
@@ -140,19 +140,24 @@ export default function Dashboard() {
         <section className="stack-m" aria-label="Coming soon">
           <h2>Coming soon</h2>
           <div className="grid g3">
-            {COMING.map((c) => (
-              <div key={c.title} className="card flat stack-s" aria-disabled="true">
+            {COMING.map((c) => {
+              const body = (
+                <>
                 <div className="row between">
                   <span className="row" style={{ gap: 8, color: 'var(--teal-d)' }}><Icon name={c.icon} /><b style={{ color: 'var(--ink)' }}>{c.title}</b></span>
-                  <span className="chip line" style={{ fontSize: 11 }}>Coming soon</span>
+                  {c.to ? <span className="chip mint" style={{ fontSize: 11 }}>Open →</span> : <span className="chip line" style={{ fontSize: 11 }}>Coming soon</span>}
                 </div>
                 <div className="row" style={{ flexWrap: 'nowrap', alignItems: 'flex-end', gap: 8 }}>
                   <p className="small muted grow" style={{ margin: 0 }}>{c.text}</p>
                   {c.bara && <BaraPose pose={c.bara} size={74} motion="none" />}
                 </div>
                 {c.premium && <span className="chip gold" style={{ alignSelf: 'flex-start', fontSize: 11 }}>Premium</span>}
-              </div>
-            ))}
+                </>
+              )
+              return c.to
+                ? <Link key={c.title} to={c.to} className="card flat stack-s card-link">{body}</Link>
+                : <div key={c.title} className="card flat stack-s" aria-disabled="true">{body}</div>
+            })}
           </div>
         </section>
       </div>
